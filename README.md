@@ -34,11 +34,15 @@ adds three small I2C boards. Zero changes to the 3D-printed parts.
   server, OTA, LED effects, and DFPlayer events all keep running regardless of
   knob position (v1/upstream sat in a `while` loop forever).
 - **`PIPBOY3000` hotspot + phone control page** — always broadcasting,
-  WPA2-protected (password `VaultTec2077`, set via `AP_PASS` in the sketch).
-  Join it from any phone, open `http://192.168.4.1` (or `http://pipboy.local`
-  on home WiFi): status, volume, radio tracks, LED mode/brightness, home-WiFi
-  setup, **"sync clock from this phone"**, and browser firmware upload. No
-  app — chosen over BLE because iOS Safari can't do Web Bluetooth.
+  WPA2-protected. Join it from any phone, open `http://192.168.4.1` (or
+  `http://pipboy.local` on home WiFi): status, volume, radio tracks, LED
+  mode/brightness, home-WiFi setup, **"sync clock from this phone"**, and
+  browser firmware upload. No app — chosen over BLE because iOS Safari
+  can't do Web Bluetooth.
+- **Passwords:** copy `code/PipBoy3000-S3/secrets.h.example` to `secrets.h`
+  and set your own hotspot (`AP_PASS`) and OTA (`OTA_PASS`) passwords —
+  `secrets.h` is gitignored so they stay out of the repo. Building without
+  it falls back to the published defaults with a compiler warning.
 - **DS3231 RTC is the timekeeper** — clock survives power-off (±2 min/yr).
   NTP (home WiFi, background) or the phone button correct it. No more WiFi
   dependency, no 120 s boot hang, no reboot loop at conventions.

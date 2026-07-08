@@ -26,9 +26,17 @@
 //========================USEFUL VARIABLES=============================
 #define USE_FAHRENHEIT                 // comment out for Celsius
 #define TZ_INFO "CST6CDT,M3.2.0,M11.1.0" // POSIX TZ, DST automatic
-#define AP_SSID   "PIPBOY3000"
-#define AP_PASS   "VaultTec2077"       // hotspot WPA2 password (min 8 chars)
-#define OTA_PASS  "vault111"           // ArduinoOTA password
+// Passwords live in secrets.h (gitignored): copy secrets.h.example to
+// secrets.h and set your own. Without it, the PUBLISHED defaults below are
+// used — fine on the bench, don't wear it that way.
+#if __has_include("secrets.h")
+  #include "secrets.h"
+#else
+  #warning "secrets.h not found - building with published default passwords"
+  #define AP_SSID   "PIPBOY3000"
+  #define AP_PASS   "VaultTec2077"     // hotspot WPA2 password (min 8 chars)
+  #define OTA_PASS  "vault111"         // ArduinoOTA password
+#endif
 //=====================================================================
 
 #include <AnimatedGIF.h>
