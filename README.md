@@ -113,9 +113,12 @@ python -m esptool --chip esp32s3 --port COM11 --baud 921600 \
 Board confirmed genuine ESP32-S3 (8 MB PSRAM, MAC ec:da:3b:9e:97:c8). The
 `firmware.factory.bin` is PlatformIO's merged image (bootloader+partitions+
 app) and flashes at `0x0`. **Current on-board firmware: the display-on
-(`DISPLAY_ENABLED=1`) ILI9486 build** — boots clean past `tft.begin()`, hotspot
-+ control page + OTA live. Pixel output (colors/orientation/inversion) still
-needs a visual check on the wired panel; adjust per the ILI9486 notes above.
+(`DISPLAY_ENABLED=1`) ILI9486 build** — with the `USE_HSPI_PORT` fix it boots
+clean past `tft.begin()` (no more boot-loop) and the hotspot + control page +
+OTA are live. NOTE: the panel is **not wired yet**, so this only proves the SPI
+config no longer crashes talking to nothing — actual pixel output
+(colors/orientation/inversion) is unverified until the display is connected;
+adjust per the ILI9486 notes above.
 
 ## v1 firmware — `code/PipBoy3000/` (classic ESP32 fallback)
 

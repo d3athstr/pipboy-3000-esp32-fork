@@ -13,7 +13,7 @@ browser) — same content as the ASCII diagrams below.
                                  │     ESP32-S3 DevKitC       │
                                  │        (N16R8)             │
                                  │                            │
-        5-pos rotary switch      │                            │      4" TFT 480x320 (ST7796, SPI)
+        5-pos rotary switch      │                            │      4" TFT 480x320 (ILI9486, SPI)
         ┌─────────────┐          │                            │      ┌──────────────────┐
         │ pos1 STAT ──┼───────── │ GPIO4              GPIO11 ─┼───── │ MOSI (SDI)       │
         │ pos2 INV ───┼───────── │ GPIO5              GPIO12 ─┼───── │ SCK              │
@@ -49,7 +49,7 @@ browser) — same content as the ASCII diagrams below.
                                    5V rail  3.3V   GND
 ```
 
-`*` TFT power: most 4" ST7796 modules have an onboard 3.3V regulator — check
+`*` TFT power: most 4" ILI9486 modules have an onboard 3.3V regulator — check
 yours. If the module has a `J1`/regulator jumper: VCC to the 5V rail with the
 regulator enabled, otherwise VCC to 3.3V. Backlight `LED` pin per module spec
 (usually 3.3V direct or via the module's transistor). Logic is always 3.3V —

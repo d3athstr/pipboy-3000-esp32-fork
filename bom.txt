@@ -11,7 +11,8 @@
 1x Temperature and humidity sensor (SHT31, I2C 0x44)
 20x Orange LED 8mm
 50x Warm white LED 5mm
-1x 4" TFT color display (480x320, TFT_eSPI-supported controller)
+1x 4" TFT color display (480x320, ILI9486 SPI controller; needs USE_HSPI_PORT
+   + SPI 20MHz on ESP32-S3 — see README/WIRING)
 1x 5-position rotary encoder
 
 # Empire12 additions (2026-07-08) — upstream BOM has no power source:
