@@ -57,7 +57,7 @@ adds three small I2C boards. Zero changes to the 3D-printed parts.
 DFPlayer Serial1 RX=16/TX=17 (1 kΩ in the TX line); I2C SDA=8/SCL=9 shared by
 SHT31 (0x44), DS3231 (0x68), MAX17048 (0x36); LED MOSFET gate → GPIO 21;
 TFT on SPI: MOSI=11, SCLK=12, CS=10, DC=13, RST=14 (configure TFT_eSPI's
-`User_Setup.h` to match — ST7796, 320×480; the exact defines are in the
+`User_Setup.h` to match — ILI9486, 320×480; the exact defines are in the
 PlatformIO `build_flags` below).
 
 **Build (verified 2026-07-08 on ops, PlatformIO):** platform
@@ -65,11 +65,21 @@ PlatformIO `build_flags` below).
 `board_build.flash_size = 16MB`, partitions `default_16MB.csv` (dual OTA
 slots). Result: flash 28%, RAM 24%. Libraries: TFT_eSPI, AnimatedGIF,
 DFRobotDFPlayerMini, Adafruit SHT31 + BusIO, RTClib, Adafruit MAX1704X.
-TFT_eSPI build flags used for the verify build:
-`USER_SETUP_LOADED, ST7796_DRIVER, TFT_WIDTH=320, TFT_HEIGHT=480, TFT_MISO=-1,
-TFT_MOSI=11, TFT_SCLK=12, TFT_CS=10, TFT_DC=13, TFT_RST=14, LOAD_GLCD,
-LOAD_FONT2, LOAD_FONT4, LOAD_FONT6, LOAD_FONT7, LOAD_FONT8, SMOOTH_FONT,
-SPI_FREQUENCY=40000000`.
+TFT_eSPI config (panel is **ILI9486**, confirmed on hardware 2026-07-11) —
+build flags, also mirrored in `code/PipBoy3000-S3/TFT_eSPI_Setup_PipBoy.h`
+for Arduino-IDE users:
+`USER_SETUP_LOADED, ILI9486_DRIVER, USE_HSPI_PORT, TFT_WIDTH=320,
+TFT_HEIGHT=480, TFT_MISO=-1, TFT_MOSI=11, TFT_SCLK=12, TFT_CS=10, TFT_DC=13,
+TFT_RST=14, LOAD_GLCD, LOAD_FONT2, LOAD_FONT4, LOAD_FONT6, LOAD_FONT7,
+LOAD_FONT8, SMOOTH_FONT, SPI_FREQUENCY=20000000`.
+
+**`USE_HSPI_PORT` is load-bearing:** without it, on the ESP32-S3 TFT_eSPI
+shares the global `SPI` object by reference and `tft.begin()` faults in
+`spi.beginTransaction()` (null bus) → boot-loop. Giving it a dedicated port
+fixes it. ILI9486 SPI is happier at 20 MHz than 40 (40 glitched); GIF
+playback is a bit slower on ILI9486 (3 bytes/pixel) — bump the clock later
+only if it's stable. If colors look inverted add `TFT_INVERSION_ON`; if
+red/blue are swapped it's an RGB/BGR panel — add `TFT_RGB_ORDER=TFT_BGR`.
 
 Note: the control-page HTML lives in `control_page.h` — the Arduino `.ino`
 preprocessor mangles JS inside raw strings in `.ino` files, so don't fold it
@@ -102,9 +112,10 @@ python -m esptool --chip esp32s3 --port COM11 --baud 921600 \
 
 Board confirmed genuine ESP32-S3 (8 MB PSRAM, MAC ec:da:3b:9e:97:c8). The
 `firmware.factory.bin` is PlatformIO's merged image (bootloader+partitions+
-app) and flashes at `0x0`. **Current on-board firmware: the headless
-(`DISPLAY_ENABLED=0`) build** — boots, hotspot + control page + OTA live, all
-unwired peripherals report NOT FOUND as expected.
+app) and flashes at `0x0`. **Current on-board firmware: the display-on
+(`DISPLAY_ENABLED=1`) ILI9486 build** — boots clean past `tft.begin()`, hotspot
++ control page + OTA live. Pixel output (colors/orientation/inversion) still
+needs a visual check on the wired panel; adjust per the ILI9486 notes above.
 
 ## v1 firmware — `code/PipBoy3000/` (classic ESP32 fallback)
 
