@@ -15,7 +15,8 @@
 1x 5-position rotary encoder
 
 # Empire12 additions (2026-07-08) — upstream BOM has no power source:
-1x LiPo/18650 battery + TP4056 charge board + 5V boost converter
+1x LiPo/18650 battery + TP4056 charge board
+1x TPS61090 boost converter (LiPo -> 5V rail; Don has this on hand)
 1x Physical power switch
 1x 1k resistor (ESP32 TX -> DFPlayer RX, kills idle hiss)
 1x 100-470uF electrolytic cap (across DFPlayer 5V rail, prevents brownouts)
@@ -24,5 +25,8 @@
 1x ESP32-S3 DevKitC N16R8 (16MB flash/8MB PSRAM) — replaces classic ESP32
 1x DS3231 RTC module + CR2032 coin cell (I2C 0x68) — clock without WiFi
 1x MAX17048 LiPo fuel gauge board (I2C 0x36) — battery HP bar on STAT screen
+   *** PHASED: not on hand yet. Firmware auto-detects it — build/run without
+   it now (HP bar just stays dark), plug it in later, no reflash needed.
+   Wire its CELL input to the battery side, BEFORE the TPS61090 boost. ***
 1x Logic-level N-MOSFET (AO3400 / IRLZ44N) — LED PWM effects channel
 # (DFPlayer Mini stays — dedicated decoder/amp beats ESP32 software audio here)

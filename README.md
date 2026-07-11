@@ -75,6 +75,37 @@ Note: the control-page HTML lives in `control_page.h` — the Arduino `.ino`
 preprocessor mangles JS inside raw strings in `.ino` files, so don't fold it
 back into the sketch.
 
+### Headless bring-up mode (`DISPLAY_ENABLED`)
+
+The sketch has a compile switch `DISPLAY_ENABLED` (default `1`). Build with
+**`-DDISPLAY_ENABLED=0`** to skip ALL TFT hardware — the board boots straight
+to the hotspot + OTA with no panel attached and no crash. Use it to flash and
+bring a board up **before the display is wired or its controller is known**,
+then finalize the TFT config and push the display-on firmware over OTA.
+
+Why this exists: the TFT_eSPI `build_flags` above are a *starting guess*
+(assumed ST7796). With the panel unwired, `tft.begin()` faults in
+`spi.beginTransaction()` and boot-loops — so the real display config can only
+be nailed down once the 4" panel is physically connected and its controller
+confirmed (ST7796 vs ILI9488 etc.). `DISPLAY_ENABLED=0` sidesteps that so the
+rest of the board (WiFi, control page, OTA, LEDs, I2C) can be verified first.
+
+### Flashing (verified path, 2026-07-08)
+
+Flashed from RAZORCREST (Windows bench host, Python 3.11 + esptool 5.1) with
+the board on a CH343 USB-serial port:
+
+```
+python -m esptool --chip esp32s3 --port COM11 --baud 921600 \
+    write_flash --flash_size 16MB 0x0 firmware.factory.bin
+```
+
+Board confirmed genuine ESP32-S3 (8 MB PSRAM, MAC ec:da:3b:9e:97:c8). The
+`firmware.factory.bin` is PlatformIO's merged image (bootloader+partitions+
+app) and flashes at `0x0`. **Current on-board firmware: the headless
+(`DISPLAY_ENABLED=0`) build** — boots, hotspot + control page + OTA live, all
+unwired peripherals report NOT FOUND as expected.
+
 ## v1 firmware — `code/PipBoy3000/` (classic ESP32 fallback)
 
 Upstream ships four near-identical sketches (Celsius/Fahrenheit ×

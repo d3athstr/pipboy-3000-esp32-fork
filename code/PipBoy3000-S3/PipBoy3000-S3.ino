@@ -37,6 +37,15 @@
   #define AP_PASS   "VaultTec2077"     // hotspot WPA2 password (min 8 chars)
   #define OTA_PASS  "vault111"         // ArduinoOTA password
 #endif
+
+// Headless bring-up switch. 1 = normal (drives the TFT). 0 = skip ALL display
+// hardware — boots to the hotspot + OTA with no panel attached, so a board can
+// be flashed and brought up before the 4" TFT is wired / its controller known.
+// Override per-build with -DDISPLAY_ENABLED=0; the display config is finalized
+// once the panel is wired, then pushed over OTA.
+#ifndef DISPLAY_ENABLED
+  #define DISPLAY_ENABLED 1
+#endif
 //=====================================================================
 
 #include <AnimatedGIF.h>
@@ -146,34 +155,40 @@ const int BOOT_X = 8;
 const int BOOT_START_Y = 5;
 
 void bootClear() {
+  if (!DISPLAY_ENABLED) return;
   tft.fillScreen(TFT_BLACK);
   bootLine = BOOT_START_Y;
 }
 
 // status: 0 info, 1 OK, 2 WARN, 3 FAIL, 4 header
 void bootPrint(const char* msg, uint8_t status = 0) {
-  if (bootLine > 290) bootClear();
   uint16_t color;
   const char* prefix;
   switch (status) {
     case 1:  color = Light_green; prefix = "[  OK  ] "; break;
     case 2:  color = Amber_warn;  prefix = "[ WARN ] "; break;
     case 3:  color = Red_error;   prefix = "[ FAIL ] "; break;
-    case 4:
-      tft.setTextColor(Light_green, TFT_BLACK);
-      tft.drawString(msg, BOOT_X, bootLine, 2);
-      bootLine += BOOT_LINE_H + 4;
-      return;
+    case 4:  prefix = ""; color = Light_green; break;
     default: color = Dark_green;  prefix = "  > "; break;
   }
-  tft.setTextColor(color, TFT_BLACK);
   String line = String(prefix) + String(msg);
+  Serial.println(line);            // serial log always, even headless
+  if (!DISPLAY_ENABLED) return;
+  if (bootLine > 290) bootClear();
+  if (status == 4) {
+    tft.setTextColor(Light_green, TFT_BLACK);
+    tft.drawString(msg, BOOT_X, bootLine, 2);
+    bootLine += BOOT_LINE_H + 4;
+    return;
+  }
+  tft.setTextColor(color, TFT_BLACK);
   tft.drawString(line, BOOT_X, bootLine, 2);
   bootLine += BOOT_LINE_H;
-  Serial.println(line);
 }
 
 void bootHeader() {
+  Serial.println("PIPBOY 3000 MARK IV OS v5.0.0 booting...");
+  if (!DISPLAY_ENABLED) return;
   bootClear();
   tft.setTextColor(Light_green, TFT_BLACK);
   tft.drawString("ROBCO INDUSTRIES (TM) TERMLINK", BOOT_X, BOOT_START_Y, 2);
@@ -191,11 +206,13 @@ void bootHeader() {
 bool toastVisible = false;
 
 void drawFooter() {
+  if (!DISPLAY_ENABLED) return;
   tft.drawBitmap(35, 300, Bottom_layer_2Bottom_layer_2, 380, 22, Dark_green);
   tft.drawBitmap(35, 300, myBitmapDate, 380, 22, Light_green);
 }
 
 void tftToast(const char* msg, uint8_t level = 2) {
+  if (!DISPLAY_ENABLED) return;
   uint16_t color = (level == 3) ? Red_error : Amber_warn;
   tft.fillRect(0, 290, 480, 30, TFT_BLACK);
   tft.drawRect(0, 290, 480, 30, color);
@@ -205,6 +222,7 @@ void tftToast(const char* msg, uint8_t level = 2) {
 }
 
 void tftToastClear() {
+  if (!DISPLAY_ENABLED) return;
   if (!toastVisible) return;
   tft.fillRect(0, 290, 480, 30, TFT_BLACK);
   drawFooter();
@@ -220,6 +238,7 @@ void playSound(int folder_min, int folder_max) {
 // ============================================================
 
 void drawBattery() {
+  if (!DISPLAY_ENABLED) return;
   if (!fuelOK) return;
   float p = maxlipo.cellPercent();
   if (p < 0) p = 0;
@@ -277,6 +296,7 @@ void setSystemTime(uint32_t epochUTC) {
 }
 
 void show_hour() {
+  if (!DISPLAY_ENABLED) return;
   if (!getLocalTime(&timeinfo, 20)) return;
   tft.setTextSize(2);
   int hour24 = timeinfo.tm_hour;
@@ -328,6 +348,7 @@ void show_hour() {
 // ============================================================
 
 void updateDataReadings() {
+  if (!DISPLAY_ENABLED) return;
   if (!sensorOK) {
     tftToast("SENSOR OFFLINE - NO DATA", 3);
     return;
@@ -375,9 +396,10 @@ void setGif(const uint8_t *data, size_t len) {
 }
 
 void enterScreen(int s) {
+  currentScreen = s;
+  if (!DISPLAY_ENABLED) { playSound(2, 5); return; }
   closeGif();
   toastVisible = false;
-  currentScreen = s;
   playSound(2, 5);
 
   switch (s) {
@@ -425,6 +447,7 @@ void enterScreen(int s) {
 
 // Advance the current screen's GIF by one frame; reopen when it ends
 void stepGif() {
+  if (!DISPLAY_ENABLED) return;
   if (!curGifData) return;
   if (!gifIsOpen) {
     if (!gif.open((uint8_t *)curGifData, curGifLen, GIFDraw)) return;
@@ -439,6 +462,7 @@ void stepGif() {
 }
 
 void screenOverlays() {
+  if (!DISPLAY_ENABLED) return;
   unsigned long now = millis();
   switch (currentScreen) {
     case SCR_TIME:
@@ -653,8 +677,10 @@ void setup() {
 
   Wire.begin(I2C_SDA, I2C_SCL);
 
-  tft.begin();
-  tft.setRotation(1);
+  if (DISPLAY_ENABLED) {
+    tft.begin();
+    tft.setRotation(1);
+  }
 
   bootHeader();
   bootPrint("Initializing subsystems...");
@@ -741,18 +767,26 @@ void setup() {
   summary += "] BAT[";
   summary += fuelOK ? "OK" : "!!";
   summary += "]";
-  tft.setTextColor(Light_green, TFT_BLACK);
-  tft.drawString(summary, BOOT_X, bootLine, 2);
+  Serial.println(summary);
+  if (DISPLAY_ENABLED) {
+    tft.setTextColor(Light_green, TFT_BLACK);
+    tft.drawString(summary, BOOT_X, bootLine, 2);
+  }
   delay(1200);
 
   // ---- Boot animation + sound ----
-  gif.begin(BIG_ENDIAN_PIXELS);
-  if (dfPlayerOK) myDFPlayer.playMp3Folder(1);
-  if (gif.open((uint8_t *)INIT, sizeof(INIT), GIFDraw)) {
-    tft.startWrite();
-    while (gif.playFrame(true, NULL)) yield();
-    gif.close();
-    tft.endWrite();
+  if (DISPLAY_ENABLED) {
+    gif.begin(BIG_ENDIAN_PIXELS);
+    if (dfPlayerOK) myDFPlayer.playMp3Folder(1);
+    if (gif.open((uint8_t *)INIT, sizeof(INIT), GIFDraw)) {
+      tft.startWrite();
+      while (gif.playFrame(true, NULL)) yield();
+      gif.close();
+      tft.endWrite();
+    }
+  } else {
+    if (dfPlayerOK) myDFPlayer.playMp3Folder(1);
+    Serial.println("[headless] DISPLAY_ENABLED=0 - TFT skipped, hotspot+OTA live");
   }
 
   // land on whatever the knob points at (default STAT)

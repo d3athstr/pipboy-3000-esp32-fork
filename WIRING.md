@@ -59,6 +59,7 @@ fine directly off the S3. MISO is not connected (display is write-only here).
 
 ```
   LiPo/18650 ──── MAX17048 CELL pin (fuel gauge senses pack directly)
+      │             ^^^ phased: add later, wire here — battery side
       │
       ├── BAT+/BAT- ── TP4056 charge board (USB-C in for charging)
       │                    │
@@ -66,7 +67,7 @@ fine directly off the S3. MISO is not connected (display is write-only here).
       │                    │
       │              [power switch]
       │                    │
-      └─(GND common)── 5V boost converter ──► 5V rail
+      └─(GND common)── TPS61090 boost (LiPo->5V) ──► 5V rail
                                                ├── ESP32-S3 5V/VIN pin
                                                ├── DFPlayer VCC (+bulk cap)
                                                ├── TFT VCC (see * above)
@@ -116,11 +117,24 @@ fine directly off the S3. MISO is not connected (display is write-only here).
 - Wago blocks from the original BOM work well as the 5V/GND distribution
   points — one block per rail.
 
+## Phased build (MAX17048 arrives later)
+
+The fuel gauge isn't on hand yet — that's fine. The firmware probes for it at
+boot; if it's absent, `fuelOK=false`, the boot log shows
+`MAX17048 NOT FOUND (0x36) / HP bar disabled` (a warning, not a failure), the
+STAT screen simply omits the HP bar, and the control page shows no battery
+line. When the gauge arrives, wire it to SDA/SCL + 3V3/GND and its CELL pin to
+the battery side (before the TPS61090), power-cycle, and the HP bar appears —
+**no reflash**. Nothing else depends on it.
+
 ## Bench bring-up order
 
 1. ESP32-S3 + TFT only → flash → ROBCO boot terminal appears.
-2. Add I2C boards one at a time → boot log shows RTC / fuel gauge / SHT31 OK.
+2. Add I2C boards one at a time → boot log shows RTC / SHT31 OK
+   (fuel gauge will read NOT FOUND until it arrives — expected).
 3. Add DFPlayer + SD + speaker → boot sound plays, volume from control page.
 4. Add MOSFET + LED strings → LIGHTS controls work from the phone.
-5. Battery/charge chain last; confirm HP bar tracks a partial discharge.
+5. Battery/charge chain (LiPo → TP4056 → switch → TPS61090 → 5V rail).
+6. Later: add MAX17048 on I2C + CELL to battery side → HP bar tracks a
+   partial discharge.
 ```
