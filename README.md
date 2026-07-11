@@ -93,12 +93,13 @@ to the hotspot + OTA with no panel attached and no crash. Use it to flash and
 bring a board up **before the display is wired or its controller is known**,
 then finalize the TFT config and push the display-on firmware over OTA.
 
-Why this exists: the TFT_eSPI `build_flags` above are a *starting guess*
-(assumed ST7796). With the panel unwired, `tft.begin()` faults in
-`spi.beginTransaction()` and boot-loops — so the real display config can only
-be nailed down once the 4" panel is physically connected and its controller
-confirmed (ST7796 vs ILI9488 etc.). `DISPLAY_ENABLED=0` sidesteps that so the
-rest of the board (WiFi, control page, OTA, LEDs, I2C) can be verified first.
+Why this exists: the first hardware flash boot-looped in `tft.begin()` (the
+`spi.beginTransaction()` null-bus fault, since fixed with `USE_HSPI_PORT`).
+The panel is now confirmed **ILI9486** and the display-on config is in place,
+but the display's *pixel output* still can't be validated until it's physically
+wired. `DISPLAY_ENABLED=0` lets a board be flashed and the rest of the system
+(WiFi, control page, OTA, LEDs, I2C) verified headless before the panel goes on;
+flip to `1` (the default) for the real build.
 
 ### Flashing (verified path, 2026-07-08)
 
