@@ -742,10 +742,17 @@ void setup() {
   WiFi.softAP(AP_SSID, AP_PASS);
   bootPrint("Hotspot: PIPBOY3000 / 192.168.4.1", 1);
 
+  // Home WiFi: prefer creds saved via the control page (NVS), else fall back
+  // to the compiled-in default from secrets.h (WIFI_SSID/WIFI_PASS). Either
+  // way the AP stays up and STA auto-reconnects when home is back in range.
   String ssid = prefs.getString("ssid", "");
+  String pass = prefs.getString("pass", "");
+#ifdef WIFI_SSID
+  if (ssid.length() == 0) { ssid = WIFI_SSID; pass = WIFI_PASS; }
+#endif
   if (ssid.length() > 0) {
     WiFi.setAutoReconnect(true);
-    WiFi.begin(ssid.c_str(), prefs.getString("pass", "").c_str());
+    WiFi.begin(ssid.c_str(), pass.c_str());
     String msg = "Joining " + ssid + " (background)";
     bootPrint(msg.c_str(), 0);
   } else {
