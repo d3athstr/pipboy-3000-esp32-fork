@@ -55,28 +55,80 @@ regulator enabled, otherwise VCC to 3.3V. Backlight `LED` pin per module spec
 (usually 3.3V direct or via the module's transistor). Logic is always 3.3V —
 fine directly off the S3. MISO is not connected (display is write-only here).
 
-## Power tree
+## Power wiring — point to point (build in this order)
 
-```
-  LiPo/18650 ──── MAX17048 CELL pin (fuel gauge senses pack directly)
-      │             ^^^ phased: add later, wire here — battery side
-      │
-      ├── BAT+/BAT- ── TP4056 charge board (USB-C in for charging)
-      │                    │
-      │                 OUT+/OUT-
-      │                    │
-      │              [power switch]
-      │                    │
-      └─(GND common)── TPS61090 boost (LiPo->5V) ──► 5V rail
-                                               ├── ESP32-S3 5V/VIN pin
-                                               ├── DFPlayer VCC (+bulk cap)
-                                               ├── TFT VCC (see * above)
-                                               └── LED anode strings (via
-                                                   existing 100R resistors)
+Terminal names vary slightly by board; match by function. **Build and
+meter-test each stage before adding the next.** Two Wago blocks make life
+easy: one is the **5V rail**, one is the **GND rail** — everything taps those.
 
-  ESP32-S3 3V3 out ──► 3.3V rail ── SHT31, DS3231, MAX17048 (VCC pins)
-  All grounds common: battery, boost, ESP32, TFT, DFPlayer, sensors, MOSFET S.
-```
+### Stage 1 — battery + charge + protection
+
+| From | To |
+|------|-----|
+| LiPo **+** | TP4056 **B+** |
+| LiPo **−** | TP4056 **B−** |
+
+Charge by plugging USB into the TP4056's own port — works even with the
+system switched off. Use a **protected** TP4056 (the kind with OUT+/OUT−).
+
+### Stage 2 — switch + boost to 5V
+
+| From | To |
+|------|-----|
+| TP4056 **OUT+** | **power switch** lug A |
+| power switch **lug B** | TPS61090 **VIN** (battery input +) |
+| TP4056 **OUT−** | **GND rail** |
+| TPS61090 **GND** | **GND rail** |
+| TPS61090 **EN/SHDN** | tie to VIN to force-enable (skip if your TPS61090 board is on by default) |
+| TPS61090 **5V OUT** | **5V rail** |
+
+**Meter check:** switch ON → 5V rail ≈ 5.0 V; switch OFF → 0 V. Do not wire
+loads until this passes.
+
+### Stage 3 — 5V rail loads (all tap the 5V Wago block)
+
+| To | Note |
+|----|------|
+| ESP32-S3 **5V / VIN** pin | |
+| DFPlayer **VCC** | + 100–470 µF cap across VCC↔GND right at the DFPlayer |
+| TFT **VCC** | module's onboard regulator makes its own 3.3 V |
+| LED anode strings | through the existing 100 Ω resistors |
+
+### Stage 4 — 3.3V rail loads (from the ESP32-S3 **3V3 output** pin)
+
+| To | Note |
+|----|------|
+| SHT31 **VCC** | I²C 0x44 |
+| DS3231 **VCC** | I²C 0x68 |
+| TFT **LED**/backlight | *only if your panel's backlight pin wants 3.3 V — check the silkscreen; if it draws heavily, feed it from the module VCC instead so you don't overload the ESP32's regulator* |
+
+### Stage 5 — ground: ONE common ground
+
+Tie all of these to the GND rail: battery **−**, TP4056 **B−/OUT−**,
+TPS61090 **GND**, ESP32 **GND**, TFT **GND**, DFPlayer **GND**, SHT31 &
+DS3231 **GND**, MOSFET **source**, LED cathode return.
+
+### Later — MAX17048 fuel gauge (phased)
+
+The gauge must read the **raw battery cell**, so tap it **before** the switch
+and boost:
+
+| From | To |
+|------|-----|
+| Battery **+** side (LiPo+ / TP4056 B+) | MAX17048 cell-sense input |
+| SDA / SCL | shared I²C bus, GPIO8 / GPIO9 (3.3 V) |
+| GND | GND rail |
+
+Its logic-supply pin differs by breakout (some are powered from the cell,
+some have a separate 3–5 V VIN) — send me the exact board when it arrives and
+I'll give you the precise pins. It draws only a few µA off the cell, so
+leaving it always-connected before the switch is fine.
+
+### Bench-power caution
+
+While flashing over USB, let USB power the board — **don't also have the
+battery/boost feeding the 5V/VIN pin at the same time** (two 5 V sources
+fighting). Run on battery *or* USB, not both.
 
 ## Pin table (ESP32-S3)
 
