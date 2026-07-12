@@ -209,7 +209,7 @@ the battery side (before the TPS61090), power-cycle, and the HP bar appears —
    (fuel gauge will read NOT FOUND until it arrives — expected).
 3. Add DFPlayer + SD + speaker → boot sound plays, volume from control page.
 4. Add MOSFET + LED strings → LIGHTS controls work from the phone.
-5. Battery/charge chain (LiPo → TP4056 → switch → TPS61090 → 5V rail).
+5. Power chain (LiPo → PowerBoost 500C JST, EN switch, 5V pad → 5V rail).
 6. Later: add MAX17048 on I2C + CELL to battery side → HP bar tracks a
    partial discharge.
 ```
