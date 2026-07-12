@@ -15,10 +15,13 @@
    + SPI 20MHz on ESP32-S3 — see README/WIRING)
 1x 5-position rotary encoder
 
-# Empire12 additions (2026-07-08) — upstream BOM has no power source:
-1x LiPo/18650 battery + TP4056 charge board
-1x TPS61090 boost converter (LiPo -> 5V rail; Don has this on hand)
-1x Physical power switch
+# Empire12 additions — upstream BOM has no power source:
+1x 3.7V LiPo battery (with JST; keep BAT leads <3in). Size to run time / fit.
+1x Adafruit PowerBoost 500C (#1944; TPS61090) — LiPo CHARGER + 5V boost in ONE.
+   Don has this on hand. Replaces the earlier TP4056 + separate-boost plan
+   (no TP4056 needed). 500mA cont / ~1A peak out; charges over its own microUSB.
+1x SPDT slide switch — wires to the PowerBoost EN pin (EN<->GND off / EN<->BAT
+   on). Carries no load current. See WIRING.md "Stage 2".
 1x 1k resistor (ESP32 TX -> DFPlayer RX, kills idle hiss)
 1x 100-470uF electrolytic cap (across DFPlayer 5V rail, prevents brownouts)
 
@@ -28,6 +31,6 @@
 1x MAX17048 LiPo fuel gauge board (I2C 0x36) — battery HP bar on STAT screen
    *** PHASED: not on hand yet. Firmware auto-detects it — build/run without
    it now (HP bar just stays dark), plug it in later, no reflash needed.
-   Wire its CELL input to the battery side, BEFORE the TPS61090 boost. ***
+   Wire its cell-sense input to the PowerBoost BAT pad (raw cell). ***
 1x Logic-level N-MOSFET (AO3400 / IRLZ44N) — LED PWM effects channel
 # (DFPlayer Mini stays — dedicated decoder/amp beats ESP32 software audio here)

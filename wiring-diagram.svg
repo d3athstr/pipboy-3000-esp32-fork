@@ -163,36 +163,31 @@
   <rect x="320" y="815" width="820" height="170" fill="#0a2410" stroke="#30ff50" stroke-width="2"/>
   <text x="730" y="841" fill="#30ff50" font-size="15" text-anchor="middle" font-weight="bold">POWER — all grounds common</text>
 
-  <rect x="340" y="865" width="120" height="56" fill="#0b1a0e" stroke="#30ff50"/>
-  <text x="400" y="888" fill="#30ff50" font-size="12" text-anchor="middle">LiPo / 18650</text>
-  <text x="400" y="906" fill="#56ccf2" font-size="10" text-anchor="middle">CELL &#8594; MAX17048</text>
+  <rect x="335" y="865" width="115" height="56" fill="#0b1a0e" stroke="#30ff50"/>
+  <text x="392" y="888" fill="#30ff50" font-size="12" text-anchor="middle">LiPo 3.7V</text>
+  <text x="392" y="906" fill="#56ccf2" font-size="10" text-anchor="middle">BAT &#8594; MAX17048</text>
 
-  <rect x="490" y="865" width="120" height="56" fill="#0b1a0e" stroke="#30ff50"/>
-  <text x="550" y="888" fill="#30ff50" font-size="12" text-anchor="middle">TP4056</text>
-  <text x="550" y="906" fill="#186828" font-size="10" text-anchor="middle">USB-C charging</text>
+  <rect x="500" y="858" width="180" height="70" fill="#0b1a0e" stroke="#30ff50"/>
+  <text x="590" y="878" fill="#30ff50" font-size="12" text-anchor="middle">PowerBoost 500C</text>
+  <text x="590" y="895" fill="#186828" font-size="10" text-anchor="middle">charger + 5V boost (#1944)</text>
+  <text x="590" y="912" fill="#e6b450" font-size="10" text-anchor="middle">microUSB charges the cell</text>
 
-  <rect x="640" y="865" width="100" height="56" fill="#0b1a0e" stroke="#30ff50"/>
-  <text x="690" y="888" fill="#30ff50" font-size="12" text-anchor="middle">POWER</text>
-  <text x="690" y="906" fill="#30ff50" font-size="12" text-anchor="middle">SWITCH</text>
-
-  <rect x="770" y="865" width="110" height="56" fill="#0b1a0e" stroke="#30ff50"/>
-  <text x="825" y="890" fill="#30ff50" font-size="12" text-anchor="middle">TPS61090</text>
-  <text x="825" y="906" fill="#186828" font-size="10" text-anchor="middle">5V boost</text>
+  <rect x="500" y="936" width="180" height="30" fill="#0b1a0e" stroke="#186828"/>
+  <text x="590" y="955" fill="#56ccf2" font-size="10" text-anchor="middle">SPDT switch: EN&#8211;GND=off / EN&#8211;BAT=on</text>
+  <line x1="590" y1="928" x2="590" y2="936" stroke="#56ccf2" stroke-width="1.5"/>
 
   <g stroke="#ff4d4d" stroke-width="2.5">
-    <line x1="460" y1="893" x2="483" y2="893" marker-end="url(#arr)"/>
-    <line x1="610" y1="893" x2="633" y2="893" marker-end="url(#arr)"/>
-    <line x1="740" y1="893" x2="763" y2="893" marker-end="url(#arr)"/>
-    <line x1="880" y1="893" x2="903" y2="893" marker-end="url(#arr)"/>
+    <line x1="450" y1="890" x2="493" y2="890" marker-end="url(#arr)"/>
+    <line x1="680" y1="890" x2="723" y2="890" marker-end="url(#arr)"/>
   </g>
 
-  <text x="912" y="875" fill="#ff4d4d" font-size="12">5V RAIL:</text>
+  <text x="735" y="872" fill="#ff4d4d" font-size="12">5V RAIL (~5.2V):</text>
   <g fill="#30ff50" font-size="11">
-    <text x="912" y="895">ESP32 5V/VIN &#183; DFPlayer VCC</text>
-    <text x="912" y="913">TFT VCC * &#183; LED anodes</text>
+    <text x="735" y="892">ESP32 5V/VIN &#183; DFPlayer VCC</text>
+    <text x="735" y="910">TFT VCC * &#183; LED anodes</text>
   </g>
-  <text x="340" y="948" fill="#186828" font-size="12">Wago blocks from the BOM = 5V / GND distribution points.</text>
-  <text x="340" y="966" fill="#186828" font-size="12">* TFT power depends on the module's regulator jumper — see WIRING.md.</text>
+  <text x="735" y="930" fill="#186828" font-size="10">500mA cont / ~1A peak</text>
+  <text x="340" y="980" fill="#186828" font-size="11">Wago blocks = 5V / GND rails. Keep BAT leads &lt;3in. * TFT power: see WIRING.md.</text>
 
-  <text x="600" y="1000" fill="#186828" font-size="11" text-anchor="middle">PipBoy 3000 ESP32 Fork · 2026-07-08 · text version: WIRING.md</text>
+  <text x="600" y="1000" fill="#186828" font-size="11" text-anchor="middle">PipBoy 3000 ESP32 Fork · 2026-07-11 · text version: WIRING.md</text>
 </svg>

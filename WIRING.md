@@ -61,29 +61,35 @@ Terminal names vary slightly by board; match by function. **Build and
 meter-test each stage before adding the next.** Two Wago blocks make life
 easy: one is the **5V rail**, one is the **GND rail** — everything taps those.
 
-### Stage 1 — battery + charge + protection
+### Stage 1 — PowerBoost 500C (charger + 5V boost, one board)
 
-| From | To |
+The power board is an **Adafruit PowerBoost 500C** (#1944, TPS61090-based). It
+**charges the LiPo AND boosts to ~5.2 V**, so it does the job of a TP4056 *and*
+a separate boost — no TP4056 needed. Top-edge silkscreen pads:
+`USB  GND  BAT  EN  LB  GND  5V`.
+
+| From | To (PowerBoost pad) |
 |------|-----|
-| LiPo **+** | TP4056 **B+** |
-| LiPo **−** | TP4056 **B−** |
+| LiPo battery | **JST** connector (or the `BAT` + `GND` breakout pads) — **watch polarity**, and keep these leads **short (< 3 in)**: long/inductive battery wires can destroy the boost |
+| charge | plug micro-USB into the PowerBoost's own `USB` jack (charges even while running — acts as a UPS; charge rate 500 mA) |
+| PowerBoost `5V` | **5V rail** (≈ 5.2 V) |
+| PowerBoost `GND` | **GND rail** |
 
-Charge by plugging USB into the TP4056's own port — works even with the
-system switched off. Use a **protected** TP4056 (the kind with OUT+/OUT−).
+### Stage 2 — power switch (right on the board, via EN — the illustrated way)
 
-### Stage 2 — switch + boost to 5V
+The switch sits on the **`EN`** pin, NOT the main current path, so it carries no
+power (just a signal — can be tiny). `EN` is internally pulled **high to BAT =
+ON** by default; grounding `EN` = OFF.
 
-| From | To |
-|------|-----|
-| TP4056 **OUT+** | **power switch** lug A |
-| power switch **lug B** | TPS61090 **VIN** (battery input +) |
-| TP4056 **OUT−** | **GND rail** |
-| TPS61090 **GND** | **GND rail** |
-| TPS61090 **EN/SHDN** | tie to VIN to force-enable (skip if your TPS61090 board is on by default) |
-| TPS61090 **5V OUT** | **5V rail** |
+- **2-pin switch (simplest):** between `EN` and `GND`. Open = ON,
+  closed (EN→GND) = OFF.
+- **3-pin SPDT slide (full illustration):** common → `EN`, one end → `GND`,
+  other end → `BAT`. One slide = EN–GND (OFF), other = EN–BAT (ON).
+  ⚠ Only wire the `BAT` end if the switch is **break-before-make**; if unsure,
+  wire ONLY `EN` + `GND` and skip `BAT`.
 
-**Meter check:** switch ON → 5V rail ≈ 5.0 V; switch OFF → 0 V. Do not wire
-loads until this passes.
+**Meter check:** switch ON → 5V rail ≈ 5.2 V (blue onboard LED lights); OFF → 0 V.
+Don't wire loads until this passes.
 
 ### Stage 3 — 5V rail loads (all tap the 5V Wago block)
 
@@ -104,31 +110,48 @@ loads until this passes.
 
 ### Stage 5 — ground: ONE common ground
 
-Tie all of these to the GND rail: battery **−**, TP4056 **B−/OUT−**,
-TPS61090 **GND**, ESP32 **GND**, TFT **GND**, DFPlayer **GND**, SHT31 &
-DS3231 **GND**, MOSFET **source**, LED cathode return.
+Tie all of these to the GND rail: PowerBoost `GND` pads, ESP32 **GND**,
+TFT **GND**, DFPlayer **GND**, SHT31 & DS3231 **GND**, MOSFET **source**,
+LED cathode return. (The battery ground returns through the PowerBoost JST.)
 
 ### Later — MAX17048 fuel gauge (phased)
 
-The gauge must read the **raw battery cell**, so tap it **before** the switch
-and boost:
+The gauge must read the **raw battery cell**, so tap it at the **PowerBoost
+`BAT` pad** (= the battery, before the boost):
 
 | From | To |
 |------|-----|
-| Battery **+** side (LiPo+ / TP4056 B+) | MAX17048 cell-sense input |
+| PowerBoost `BAT` pad (raw cell) | MAX17048 cell-sense input |
 | SDA / SCL | shared I²C bus, GPIO8 / GPIO9 (3.3 V) |
 | GND | GND rail |
 
 Its logic-supply pin differs by breakout (some are powered from the cell,
 some have a separate 3–5 V VIN) — send me the exact board when it arrives and
-I'll give you the precise pins. It draws only a few µA off the cell, so
-leaving it always-connected before the switch is fine.
+I'll give you the precise pins. It draws only a few µA off the cell.
+
+Bonus: the PowerBoost's `LB` (Low-Battery) pad already goes low under 3.2 V,
+so a fuel gauge is partly redundant — but `LB` is pulled to **BAT (~4.2 V),
+NOT 3.3 V-safe**, so it can't wire straight to an ESP32 GPIO. If you ever want
+a low-batt input, run `LB` through a divider (e.g. 100 k/100 k) or skip it in
+favour of the MAX17048.
+
+### Current budget
+
+The PowerBoost 500C does **500 mA continuous, ~1 A peak** (if the cell can
+supply it). Display backlight + DFPlayer + many LEDs can approach that —
+budget it, and dim/PWM the LEDs (the MOSFET channel) rather than running all
+70 flat-out. Charging keeps up only below ~300 mA draw, so charge while the
+prop is off/idle, not mid-use.
 
 ### Bench-power caution
 
-While flashing over USB, let USB power the board — **don't also have the
-battery/boost feeding the 5V/VIN pin at the same time** (two 5 V sources
-fighting). Run on battery *or* USB, not both.
+While flashing the ESP32 over its USB, don't also have the PowerBoost's `5V`
+feeding the ESP32 5V/VIN at the same time — two 5 V sources fight, and the
+PowerBoost warns you shouldn't back-feed its `5V` pad while it's disabled.
+Easiest: put an inline JST/jumper between the PowerBoost `5V` and the 5V rail
+so you can disconnect it for bench flashing; run the ESP32 on its USB *or* the
+PowerBoost, not both. (Charging the LiPo via the PowerBoost's own micro-USB is
+always fine and independent of this.)
 
 ## Pin table (ESP32-S3)
 
