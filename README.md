@@ -10,10 +10,21 @@ firmware goes to jeje95 / Jéjé l'Ingé. The pristine upstream download stays i
 the sibling folder `PipBoy 3000 ESP32 - 6654866/` — this fork is where we make
 changes.
 
+> **Build status (2026-07-12):** everything works — power, DMZ networking,
+> sound, temp/humidity, NTP clock, LED channel, remote OTA — **except the
+> display**, which is stuck solid-grey and under active troubleshooting (a new
+> screen is on order). Full history, what's been ruled out, and the next steps
+> are in **[`DISPLAY-BRINGUP-LOG.md`](DISPLAY-BRINGUP-LOG.md)** — read that
+> before touching the display. The firmware was migrated from TFT_eSPI to
+> **LovyanGFX** (TFT_eSPI 2.5.43 can't drive SPI on the ESP32-S3 + arduino-3.x
+> core). Build with `pio run` (see `platformio.ini`).
+
 ## Layout
 
 | Path | Contents |
 |------|----------|
+| `DISPLAY-BRINGUP-LOG.md` | **Display troubleshooting log** — read first for display work |
+| `platformio.ini` | Reproducible build (pioarduino S3 toolchain + LovyanGFX) |
 | `WIRING.md` / `wiring-diagram.svg` | v2 wiring — text and graphical versions |
 | `code/PipBoy3000-S3/` | **v2 firmware (current)** — ESP32-S3, control page, RTC, HP bar, LED FX, OTA |
 | `code/PipBoy3000/` | v1 firmware — classic ESP32, unified/fixed port of upstream (kept as fallback) |

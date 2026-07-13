@@ -67,7 +67,7 @@ void GIFDraw(GIFDRAW *pDraw)
       {
         // DMA would degrtade performance here due to short line segments
         tft.setAddrWindow(pDraw->iX + x, y, iCount, 1);
-        tft.pushPixels(usTemp, iCount);
+        tft.pushPixels(&usTemp[0][0], iCount);
         x += iCount;
         iCount = 0;
       }

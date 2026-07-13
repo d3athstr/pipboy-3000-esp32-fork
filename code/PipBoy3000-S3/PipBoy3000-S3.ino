@@ -95,14 +95,14 @@ const byte TXD2 = 17;
 #include <Preferences.h>
 #include <Wire.h>
 #include <SPI.h>
-#include <TFT_eSPI.h>
+#include "lgfx_pipboy.h"
 #include "DFRobotDFPlayerMini.h"
 #include "Adafruit_SHT31.h"
 #include "RTClib.h"
 #include "Adafruit_MAX1704X.h"
 #include <time.h>
 
-TFT_eSPI tft = TFT_eSPI();
+LGFX tft;
 DFRobotDFPlayerMini myDFPlayer;
 #define FPSerial Serial1
 Adafruit_SHT31 sht31 = Adafruit_SHT31();
@@ -519,6 +519,7 @@ void handleStatus() {
   json += ",\"ledmode\":" + String(ledMode);
   json += ",\"ledbright\":" + String(ledBright);
   json += ",\"ip\":\"" + (staOK ? WiFi.localIP().toString() : String("not connected")) + "\"";
+  json += ",\"build\":\"NEWBOARD-ILI9486-p10-14 " __DATE__ " " __TIME__ "\"";
   json += "}";
   server.send(200, "application/json", json);
 }
@@ -680,6 +681,7 @@ void setup() {
   if (DISPLAY_ENABLED) {
     tft.begin();
     tft.setRotation(1);
+    tft.setSwapBytes(true);   // GIF palette is byte-reversed (BIG_ENDIAN_PIXELS)
   }
 
   bootHeader();
