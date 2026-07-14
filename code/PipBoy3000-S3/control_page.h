@@ -50,14 +50,14 @@ button:hover{background:var(--g);color:var(--bg)}
 <label>Volume: <span id="vv"></span>/30</label>
 <input type="range" id="vol" min="0" max="30" onchange="setVol(this.value)">
 <div class="row">
-<button onclick="api('/api/play?n=5')">RADIO 1</button>
-<button onclick="api('/api/play?n=6')">RADIO 2</button>
-<button onclick="api('/api/play?n=7')">RADIO 3</button>
+<button onclick="api('/api/play?n=5',{method:'POST'})">RADIO 1</button>
+<button onclick="api('/api/play?n=6',{method:'POST'})">RADIO 2</button>
+<button onclick="api('/api/play?n=7',{method:'POST'})">RADIO 3</button>
 </div>
 <div class="row">
-<button onclick="api('/api/play?n=8')">RADIO 4</button>
-<button onclick="api('/api/play?n=9')">RADIO 5</button>
-<button onclick="api('/api/stop')">STOP</button>
+<button onclick="api('/api/play?n=8',{method:'POST'})">RADIO 4</button>
+<button onclick="api('/api/play?n=9',{method:'POST'})">RADIO 5</button>
+<button onclick="api('/api/stop',{method:'POST'})">STOP</button>
 </div>
 </fieldset>
 
