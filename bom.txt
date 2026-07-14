@@ -31,12 +31,15 @@
 # v2 firmware additions (2026-07-08) — ESP32-S3 build:
 1x ESP32-S3 DevKitC N16R8 (16MB flash/8MB PSRAM) — replaces classic ESP32
    *** ESP32 REPLACED 2026-07-12 (old board suspected SPI-pin damage from the
-   reverse-battery/brownout events). New MAC 84:fc:e6:5e:67:58 — DMZ
-   reservation/NetBox/DNS still keyed to old MAC, needs re-onboarding. ***
+   reverse-battery/brownout events). New MAC 84:fc:e6:5e:67:58 — network
+   RE-ONBOARDED 2026-07-13: DMZ reservation + NetBox + DNS re-pointed to new MAC,
+   back on 192.168.15.60 / pipboy.empire12.net. ***
 1x DS3231 RTC module + CR2032 coin cell (I2C 0x68) — clock without WiFi
 1x MAX17048 LiPo fuel gauge board (I2C 0x36) — battery HP bar on STAT screen
    *** PHASED: not on hand yet. Firmware auto-detects it — build/run without
    it now (HP bar just stays dark), plug it in later, no reflash needed.
    Wire its cell-sense input to the PowerBoost BAT pad (raw cell). ***
-1x Logic-level N-MOSFET (AO3400 / IRLZ44N) — LED PWM effects channel
+1x LED driver on GPIO21 — AS BUILT: 2N3904 NPN for the 3-LED channel (base via
+   1k + 10k pulldown). Upstream design uses a logic-level N-MOSFET (AO3400/
+   IRLZ44N) for its ~70-LED bank; switch to that if the LED count grows past ~8.
 # (DFPlayer Mini stays — dedicated decoder/amp beats ESP32 software audio here)

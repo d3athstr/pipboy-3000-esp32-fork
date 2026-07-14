@@ -135,13 +135,39 @@ NOT 3.3 V-safe**, so it can't wire straight to an ESP32 GPIO. If you ever want
 a low-batt input, run `LB` through a divider (e.g. 100 k/100 k) or skip it in
 favour of the MAX17048.
 
+### LED channel — AS BUILT (2N3904, 3 LEDs)
+
+The upstream design lights ~70 LEDs through a logic-level **MOSFET** (see the
+master diagram / pin table). **Don's build uses only 3 LEDs**, so a small
+**2N3904 NPN transistor** is used instead of the MOSFET — well within its
+200 mA limit (~60–90 mA for 3 LEDs). Low-side switch on **GPIO21** (same PWM
+firmware: steady / breath / flicker + brightness):
+
+```
+  5V rail ──┬──[100Ω]──▷|── LED 1 ──┐
+            ├──[100Ω]──▷|── LED 2 ──┤   3 LEDs in parallel, each its own 100Ω
+            └──[100Ω]──▷|── LED 3 ──┘
+                                     │  ← all 3 cathodes tied together
+                                 Collector (C)
+  GPIO21 ──[1kΩ]── Base (B) ────────┤ 2N3904
+                     │            Emitter (E)
+                  [10kΩ]             │
+                     └──── GND ─────GND rail
+```
+
+- LED anodes → 5V via 100 Ω (one per LED); all cathodes → **Collector**.
+- **Emitter** → GND. **Base** → GPIO21 through **1 kΩ**. **10 kΩ** Base→GND
+  pulldown (off at boot).
+- 2N3904 pinout (TO-92, flat face toward you, legs down): **E · B · C**
+  left→right — middle pin is always Base.
+- If the LED count ever grows past ~5–8 (150 mA), switch to the MOSFET.
+
 ### Current budget
 
 The PowerBoost 500C does **500 mA continuous, ~1 A peak** (if the cell can
-supply it). Display backlight + DFPlayer + many LEDs can approach that —
-budget it, and dim/PWM the LEDs (the MOSFET channel) rather than running all
-70 flat-out. Charging keeps up only below ~300 mA draw, so charge while the
-prop is off/idle, not mid-use.
+supply it). Display backlight + DFPlayer draw are the main loads (the 3-LED
+channel is negligible). Charging keeps up only below ~300 mA draw, so charge
+while the prop is off/idle, not mid-use.
 
 ### Bench-power caution
 
@@ -171,7 +197,7 @@ always fine and independent of this.)
 | 14   | out       | TFT RST | |
 | 16   | UART1 RX  | DFPlayer TX | direct, 3.3V-safe |
 | 17   | UART1 TX  | DFPlayer RX | **through 1 kΩ series resistor** (kills hiss) |
-| 21   | out, PWM  | MOSFET gate | 100 Ω series + 100 kΩ gate→GND pulldown |
+| 21   | out, PWM  | LED driver | AS BUILT: 2N3904 **base** via 1 kΩ (+10 kΩ pulldown), 3 LEDs — see "LED channel". Upstream: MOSFET gate via 100 Ω for ~70 LEDs |
 | 5V/VIN | power   | 5V rail from boost | |
 | 3V3  | power out | sensor boards | |
 | GND  | —         | common ground | |
@@ -179,7 +205,10 @@ always fine and independent of this.)
 ## Do / don't
 
 - **Do** put the 100–470 µF electrolytic across DFPlayer VCC↔GND, close to the
-  board — loud playback browns it out otherwise.
+  board — loud playback browns it out otherwise. It's **polarized**: `+` lead
+  (long, no stripe) → VCC (pin 1); `−` lead (stripe) → GND (pin 7). In parallel
+  with the existing power — you don't reroute anything. Any voltage rating
+  ≥10 V is fine (a 100 V cap works, just bigger).
 - **Do** keep the 1 kΩ in the ESP32→DFPlayer RX line; without it the speaker
   hisses constantly at idle.
 - **Do** wire the MAX17048 CELL input to the battery side (before the switch),

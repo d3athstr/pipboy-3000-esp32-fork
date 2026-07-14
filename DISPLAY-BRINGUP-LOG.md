@@ -125,12 +125,21 @@ only a one-line fix (`&usTemp[0][0]` for the templated `pushPixels`).
    set `invert = true`, if red/blue swapped set `rgb_order = true`; then raise
    `freq_write` (try 40 MHz) for smooth GIFs.
 
-## Network follow-up (new board MAC)
+## Network — DONE (re-onboarded to new board MAC, 2026-07-13)
 
-The old board's DMZ identity was fully onboarded (reserved IP `192.168.15.60`,
-DNS `pipboy.empire12.net`, NetBox device `PipBoy-3000` id 1550) — but all keyed
-to the **old** MAC `ec:da:3b:9e:97:c8`. The **new** board is
-**`84:fc:e6:5e:67:58`**. When the build is back together and on WiFi:
-- Update the EdgeRouter DMZ static-mapping `PipBoy-3000` to the new MAC.
-- Update NetBox device 1550's interface MAC to the new one.
-- DNS/reserved IP can stay `.15.60` once the reservation points at the new MAC.
+The new board (`84:fc:e6:5e:67:58`) is fully re-onboarded and back on the tidy
+identity:
+- EdgeRouter DMZ static-mapping `PipBoy-3000` → new MAC, IP **192.168.15.60**.
+- NetBox device 1550 interface MAC updated to the new MAC.
+- DNS **`pipboy.empire12.net` → 192.168.15.60** (verified reachable by name).
+The old MAC `ec:da:3b:9e:97:c8` is retired.
+
+## Other subsystems fixed since the pause
+
+- **Radio playback:** the control-page RADIO/STOP buttons sent GET but the
+  firmware handlers are POST-only → silent no-op. Fixed (buttons now POST);
+  verified working. The UI-sound + radio MP3s are present on the SD card.
+- **SHT31** reconnected after the board swap (temp/humidity back online).
+- **DFPlayer 470 µF cap** + **3-LED / 2N3904** channel wired — see WIRING.md.
+
+**Still open: the display** (solid grey — new screen pending; see above).
