@@ -11,11 +11,10 @@
 1x Temperature and humidity sensor (SHT31, I2C 0x44)
 20x Orange LED 8mm
 50x Warm white LED 5mm
-1x 4.0" TFT SPI 480x320 v2.1 (LCDwiki-style, XPT2046 touch + microSD onboard).
-   Controller unconfirmed (ILI9486 read off chip; may be ST7796/ILI9488).
-   Driven via LovyanGFX, NOT TFT_eSPI. *** DISPLAY NOT YET WORKING (solid grey)
-   — new screen on order; see DISPLAY-BRINGUP-LOG.md. Watch the LCD vs touch
-   (t_*) vs SD (sd_*) pins — wiring to the wrong group = permanent grey. ***
+1x 3.5" TFT SPI 480x320, controller ILI9488 (Haldzemo; XPT2046 touch + SD).
+   Driven via LovyanGFX (NOT TFT_eSPI). WORKING as of 2026-07-15: Panel_ILI9488,
+   8MHz, setSwapBytes(false). Wire the LCD pins (cs/sdi/sck/dc/reset), NOT the
+   touch (t_*) or SD (sd_*) pins. See DISPLAY-BRINGUP-LOG.md.
 1x 5-position rotary encoder
 
 # Empire12 additions — upstream BOM has no power source:

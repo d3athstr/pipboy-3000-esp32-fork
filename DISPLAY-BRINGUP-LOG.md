@@ -1,10 +1,35 @@
 # PipBoy 3000 — Display Bring-Up Log & Troubleshooting
 
-**Status (2026-07-12): display NOT working — solid grey. Everything else on the
-build works. A new screen is on order.** This log captures the full saga so the
-next attempt doesn't re-tread ground.
+## ✅ RESOLVED (2026-07-15) — the display works
 
-## TL;DR — where it stands
+Final working config (in `code/PipBoy3000-S3/`, build `v5.0-ILI9488`):
+- **Panel:** Haldzemo 3.5" 480×320 SPI, controller **ILI9488** (`Panel_ILI9488`).
+- **SPI:** `SPI2_HOST`, pins CS10/MOSI11/SCK12/DC13/RST14, **`freq_write = 8 MHz`**
+  (higher clocks corrupt frames into diagonal lines on this hand-soldered/
+  matrix-routed wiring — 8 MHz renders complete images).
+- **Colours:** `rgb_order = false` **and `tft.setSwapBytes(false)`** — the GIF
+  pixels were byte-scrambled (green Vault Boy showed as red/blue); flipping the
+  byte order fixes it. (`rgb_order=true` and a manual R/B palette swap were both
+  wrong turns — the manual swap operated on byte-reversed data and turned green
+  blue.)
+
+**What the whole saga actually was: HARDWARE.** The real blockers were (1) a
+**PowerBoost 500C damaged by the earlier reverse-battery event**, outputting
+**3.15 V instead of 5.2 V** → the display controller browned out (grey + `0x0`
+read); and (2) a **loose SPI solder joint**. Once power and the connection were
+solid, it came down to just the right driver (ILI9488) and byte order. All the
+library/driver/clock/board/screen swapping was chasing a symptom whose root was
+power. **Lesson: when a display reads its controller ID as `0x0` and stays grey
+with everything "correct," measure the actual voltage at the panel VCC first.**
+
+**Still open (mechanical, not firmware):** the rotary switch's **position-5
+contact doesn't ground GPIO15**, so page 5 (RADIO) doesn't open — verified via
+`/api/status` `knob` field reading `11111` at position 5. Reflow/reseat that one
+wire. The RADIO image itself loads fine (`radio_ok` was true).
+
+---
+
+## Historical TL;DR (kept for the record — this was the stuck state)
 
 - **Symptom:** display is solid uniform grey. Backlight lights (on a good panel),
   but the controller never initializes — nothing ever renders.
