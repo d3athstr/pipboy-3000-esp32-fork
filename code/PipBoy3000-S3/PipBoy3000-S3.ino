@@ -519,7 +519,7 @@ void handleStatus() {
   json += ",\"ledmode\":" + String(ledMode);
   json += ",\"ledbright\":" + String(ledBright);
   json += ",\"ip\":\"" + (staOK ? WiFi.localIP().toString() : String("not connected")) + "\"";
-  json += ",\"build\":\"radio-post-fix " __DATE__ " " __TIME__ "\"";
+  json += ",\"build\":\"ILI9488 " __DATE__ " " __TIME__ "\"";
   json += "}";
   server.send(200, "application/json", json);
 }

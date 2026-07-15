@@ -13,7 +13,7 @@
 #include <LovyanGFX.hpp>
 
 class LGFX : public lgfx::LGFX_Device {
-  lgfx::Panel_ILI9486 _panel;
+  lgfx::Panel_ILI9488 _panel;
   lgfx::Bus_SPI       _bus;
 public:
   LGFX(void) {
