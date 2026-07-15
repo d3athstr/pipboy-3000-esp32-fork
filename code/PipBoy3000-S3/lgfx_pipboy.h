@@ -43,7 +43,7 @@ public:
       c.offset_rotation = 0;
       c.readable      = false;
       c.invert        = false;     // flip if colours are inverted
-      c.rgb_order     = false;     // set true if red/blue swapped
+      c.rgb_order     = false;    // R/B handled in GIFDraw palette (rgb_order had no effect on pushPixels)
       c.dlen_16bit    = false;
       c.bus_shared    = false;
       _panel.config(c);

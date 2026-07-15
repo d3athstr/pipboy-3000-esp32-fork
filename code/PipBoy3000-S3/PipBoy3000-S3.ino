@@ -24,7 +24,7 @@
 //  LED MOSFET gate -> GPIO 21 (LEDC PWM)
 
 //========================USEFUL VARIABLES=============================
-#define USE_FAHRENHEIT                 // comment out for Celsius
+// #define USE_FAHRENHEIT              // commented = Celsius
 #define TZ_INFO "CST6CDT,M3.2.0,M11.1.0" // POSIX TZ, DST automatic
 // Passwords live in secrets.h (gitignored): copy secrets.h.example to
 // secrets.h and set your own. Without it, the PUBLISHED defaults below are
@@ -133,6 +133,7 @@ int currentScreen = SCR_NONE;
 bool gifIsOpen = false;
 const uint8_t *curGifData = nullptr;
 size_t curGifLen = 0;
+
 
 // clock-draw state
 struct tm timeinfo;
@@ -519,7 +520,9 @@ void handleStatus() {
   json += ",\"ledmode\":" + String(ledMode);
   json += ",\"ledbright\":" + String(ledBright);
   json += ",\"ip\":\"" + (staOK ? WiFi.localIP().toString() : String("not connected")) + "\"";
-  json += ",\"build\":\"ILI9488 " __DATE__ " " __TIME__ "\"";
+  json += ",\"build\":\"v5.0-ILI9488 " __DATE__ " " __TIME__ "\"";
+  json += ",\"screen\":" + String(currentScreen);
+  json += ",\"knob\":\"" + String((int)digitalRead(IN_STAT)) + String((int)digitalRead(IN_INV)) + String((int)digitalRead(IN_DATA)) + String((int)digitalRead(IN_TIME)) + String((int)digitalRead(IN_RADIO)) + "\"";
   json += "}";
   server.send(200, "application/json", json);
 }
@@ -681,7 +684,7 @@ void setup() {
   if (DISPLAY_ENABLED) {
     tft.begin();
     tft.setRotation(1);
-    tft.setSwapBytes(true);   // GIF palette is byte-reversed (BIG_ENDIAN_PIXELS)
+    tft.setSwapBytes(false);  // GIF pixels were byte-scrambled (red+blue); flip endianness
   }
 
   bootHeader();
