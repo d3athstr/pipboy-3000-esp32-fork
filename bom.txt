@@ -35,9 +35,14 @@
    back on 192.168.15.60 / pipboy.empire12.net. ***
 1x DS3231 RTC module + CR2032 coin cell (I2C 0x68) — clock without WiFi
 1x MAX17048 LiPo fuel gauge board (I2C 0x36) — battery HP bar on STAT screen
-   *** PHASED: not on hand yet. Firmware auto-detects it — build/run without
-   it now (HP bar just stays dark), plug it in later, no reflash needed.
-   Wire its cell-sense input to the PowerBoost BAT pad (raw cell). ***
+   *** ON HAND 2026-08-20 (7 in stock, PartsBin [91]) but NOT YET INSTALLED.
+   Firmware auto-detects it — build/run without it now (HP bar just stays
+   dark), plug it in later, no reflash needed. 8-pin header as counted on the
+   board: + - SDA SCL QST VCC GND ALT (there is NO "BAT" pad). Wire + to the
+   PowerBoost BAT pad (raw cell), VCC to the ESP32 3V3 (NOT the cell, or the
+   I2C pullups sit at 4.2V), SDA/SCL to GPIO8/9, GND+- to the ground rail,
+   QST/ALT unconnected. Stock is mixed: some units are MAX17043, which the
+   Adafruit_MAX1704X library refuses — see WIRING.md. ***
 1x LED driver on GPIO21 — AS BUILT: 2N3904 NPN for the 3-LED channel (base via
    1k + 10k pulldown). Upstream design uses a logic-level N-MOSFET (AO3400/
    IRLZ44N) for its ~70-LED bank; switch to that if the LED count grows past ~8.

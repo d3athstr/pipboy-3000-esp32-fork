@@ -114,20 +114,80 @@ Tie all of these to the GND rail: PowerBoost `GND` pads, ESP32 **GND**,
 TFT **GND**, DFPlayer **GND**, SHT31 & DS3231 **GND**, MOSFET **source**,
 LED cathode return. (The battery ground returns through the PowerBoost JST.)
 
-### Later — MAX17048 fuel gauge (phased)
+### MAX17048 fuel gauge — boards on hand, not yet installed
 
-The gauge must read the **raw battery cell**, so tap it at the **PowerBoost
-`BAT` pad** (= the battery, before the boost):
+**Stock (2026-08-20): 7 boards on hand**, and they are not all the same part
+— see "Which board you have" below. Wire a genuine **MAX17048**; keep the
+MAX17043 modules for another project (the firmware's library rejects them).
 
-| From | To |
-|------|-----|
-| PowerBoost `BAT` pad (raw cell) | MAX17048 cell-sense input |
-| SDA / SCL | shared I²C bus, GPIO8 / GPIO9 (3.3 V) |
-| GND | GND rail |
+The gauge reads the **raw battery cell**. It is a ModelGauge part — it
+measures **voltage only**, no sense resistor — so pack current does not have
+to flow through it. Two physically different arrangements, electrically the
+same circuit:
 
-Its logic-supply pin differs by breakout (some are powered from the cell,
-some have a separate 3–5 V VIN) — send me the exact board when it arrives and
-I'll give you the precise pins. It draws only a few µA off the cell.
+- **In-line**: LiPo → gauge `+`/`−` → on to the PowerBoost battery input.
+- **Tap** (fewer connectors, preferred here): LiPo → PowerBoost as normal,
+  plus one sense wire from the PowerBoost `BAT` pad to the gauge's `+` pad.
+
+Either way the power chain is
+`LiPo → PowerBoost 500C → 5 V rail → ESP32 VIN` — the gauge only ever hangs
+off the **cell side**, never between the PowerBoost and the ESP32.
+
+**Pinout — as counted on the board in hand (2026-08-20):** eight pins,
+`+  −  SDA  SCL  QST  VCC  GND  ALT`. Note there is **no `BAT` pad** and no
+Adafruit-style `VIN`/`Bat`/`SDI` labelling — cell and logic supply are two
+separate pairs (`+`/`−` and `VCC`/`GND`), which is what makes the 3.3 V logic
+feed below straightforward.
+
+| Gauge pin | To | Note |
+|-----------|----|------|
+| `+` | PowerBoost `BAT` pad (raw cell +) | the sense node — **not** the 5 V rail |
+| `−` | GND rail | cell −; normally common with `GND` on the module |
+| `VCC` | ESP32 **3V3** | logic / I²C pullup rail — **not** the cell |
+| `GND` | GND rail | |
+| `SDA` | **GPIO8** | shared bus with SHT31 + DS3231 |
+| `SCL` | **GPIO9** | |
+| `QST` | **leave unconnected** | quick-start; hardware reset of the gauge |
+| `ALT` | **leave unconnected** | alert output; the firmware polls instead |
+
+The IC is powered from the cell (`CELL` is the MAX17048's only supply pin), so
+`+` is both the measurement input and the chip's power. `VCC` feeds only the
+logic / pullup rail — tie it to the cell instead and SDA/SCL idle at ~4.2 V,
+over GPIO8/9's **3.6 V absolute maximum**. When the EN switch kills the boost,
+`VCC` drops to 0 V while `+` stays live: that is the intended off state. Draw
+is ~3 µA hibernate / ~23 µA active, off the cell.
+
+Check `−` to `GND` for continuity before wiring. On most of these modules they
+are the same net, in which case landing both on the ground rail is harmless
+and mechanically tidier. If they *don't* beep, keep them separate: `−` follows
+the cell, `GND` follows the logic rail.
+
+**Which board you have.** PartsBin `[91]` deliberately collapses MAX17048 and
+MAX17043 modules onto one component (Don's ruling 2026-08-19 — do not "fix"
+it), so the stock is mixed:
+
+| Source | Qty | Board | Verdict |
+|--------|-----|-------|---------|
+| AliExpress (order 1832) | 4 | "MAX17048 5580" — 8-pin clone, pinout above | **use these** |
+| Amazon (order 1697) | 2 | "gernie" MAX17048/17043 IIC module | meter first, see below |
+| AliExpress (order 1835) | 2 | MAX17043 module | **won't be detected** |
+| adjustment | 1 | unknown | identify before wiring |
+
+Silkscreens vary between clone batches. If a board turns up with a different
+label set, the function mapping is what matters (cell pair → PowerBoost `BAT`
++ ground, `VCC` → 3V3, SDA/SCL → GPIO8/9). Some clones tie `VCC` straight to
+the cell node, which puts the pullups at 4.2 V. **Meter before connecting:**
+power the board, leave the ESP32 off, measure SDA→GND. Above 3.6 V, do not
+land it on GPIO8/9 — that board needs its own 3.3 V feed or a level shifter.
+
+**A real MAX17043 will never be detected, and that is not a wiring fault.**
+The firmware uses `Adafruit_MAX1704X`, whose `begin()` requires
+`(getICversion() & 0xFFF0) == 0x0010` — MAX17048/49 only. If the HP bar stays
+dark on a 17043 board, the harness is fine; the library is refusing the chip.
+
+**No battery = silent bus.** The gauge is cell-powered, so on USB with no LiPo
+attached it will not answer at `0x36`. The 2026-07-11 bring-up log's
+"MAX17048 absent" is consistent with that, not with bad wiring.
 
 Bonus: the PowerBoost's `LB` (Low-Battery) pad already goes low under 3.2 V,
 so a fuel gauge is partly redundant — but `LB` is pulled to **BAT (~4.2 V),
@@ -211,8 +271,10 @@ always fine and independent of this.)
   ≥10 V is fine (a 100 V cap works, just bigger).
 - **Do** keep the 1 kΩ in the ESP32→DFPlayer RX line; without it the speaker
   hisses constantly at idle.
-- **Do** wire the MAX17048 CELL input to the battery side (before the switch),
-  not the 5V rail — it measures pack voltage.
+- **Do** wire the MAX17048 `+` input to the battery side (before the switch),
+  not the 5V rail — it measures pack voltage. **Do** feed its `VCC` from the
+  ESP32's **3V3**, not from the cell, or the I²C pullups sit at 4.2 V and
+  exceed GPIO8/9's 3.6 V maximum.
 - **Don't** use GPIO 0, 3, 19/20, 45, 46 for anything (strapping/USB pins),
   and avoid 26–37 (flash/PSRAM on the N16R8 module).
 - **Don't** feed the TFT or DFPlayer logic from 5V — all signals are 3.3V.
@@ -221,15 +283,17 @@ always fine and independent of this.)
 - Wago blocks from the original BOM work well as the 5V/GND distribution
   points — one block per rail.
 
-## Phased build (MAX17048 arrives later)
+## Phased build (MAX17048 not yet installed)
 
-The fuel gauge isn't on hand yet — that's fine. The firmware probes for it at
-boot; if it's absent, `fuelOK=false`, the boot log shows
-`MAX17048 NOT FOUND (0x36) / HP bar disabled` (a warning, not a failure), the
-STAT screen simply omits the HP bar, and the control page shows no battery
-line. When the gauge arrives, wire it to SDA/SCL + 3V3/GND and its CELL pin to
-the battery side (before the TPS61090), power-cycle, and the HP bar appears —
-**no reflash**. Nothing else depends on it.
+The boards arrived (7 on hand, 2026-08-20) but none is wired in yet — that's
+fine. The firmware probes for it at boot; if it's absent, `fuelOK=false`, the
+boot log shows `MAX17048 NOT FOUND (0x36) / HP bar disabled` (a warning, not a
+failure), the STAT screen simply omits the HP bar, and the control page shows
+no battery line. To install: wire `SDA`/`SCL` to GPIO8/9, `VCC` to **3V3**,
+`GND`/`−` to the rail and `+` to the battery side (before the TPS61090),
+power-cycle, and the HP bar appears — **no reflash**. Nothing else depends on
+it. Full pin table and the board-variant warnings are in the fuel-gauge
+section above.
 
 ## Bench bring-up order
 
@@ -239,6 +303,6 @@ the battery side (before the TPS61090), power-cycle, and the HP bar appears —
 3. Add DFPlayer + SD + speaker → boot sound plays, volume from control page.
 4. Add MOSFET + LED strings → LIGHTS controls work from the phone.
 5. Power chain (LiPo → PowerBoost 500C JST, EN switch, 5V pad → 5V rail).
-6. Later: add MAX17048 on I2C + CELL to battery side → HP bar tracks a
-   partial discharge.
+6. Later: add MAX17048 on I2C (`VCC`→3V3) + `+` to battery side → HP bar
+   tracks a partial discharge. Confirm the IC is a 17048, not a 17043, first.
 ```

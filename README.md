@@ -59,6 +59,9 @@ adds three small I2C boards. Zero changes to the 3D-printed parts.
   NTP (home WiFi, background) or the phone button correct it. No more WiFi
   dependency, no 120 s boot hang, no reboot loop at conventions.
 - **MAX17048 fuel gauge → HP bar** on the STAT screen (amber <40%, red <20%).
+  Boards on hand since 2026-08-20, not yet installed; firmware auto-detects it
+  so no reflash is needed when it goes in. Pinout and the MAX17043 caveat are
+  in `WIRING.md`.
 - **LED effects** — steady / breath / flicker via one logic-level MOSFET on a
   PWM pin, brightness 0–255, settings persist across reboots.
 - **OTA two ways** — ArduinoOTA on home WiFi (password `vault111`), or upload
@@ -67,7 +70,8 @@ adds three small I2C boards. Zero changes to the 3D-printed parts.
 
 **Wiring (ESP32-S3):** rotary 5-pos → GPIO 4/5/6/7/15 (common to GND);
 DFPlayer Serial1 RX=16/TX=17 (1 kΩ in the TX line); I2C SDA=8/SCL=9 shared by
-SHT31 (0x44), DS3231 (0x68), MAX17048 (0x36); LED MOSFET gate → GPIO 21;
+SHT31 (0x44), DS3231 (0x68), MAX17048 (0x36 — its `VCC` to 3V3, `+` to the
+PowerBoost `BAT` pad); LED MOSFET gate → GPIO 21;
 TFT on SPI: MOSI=11, SCLK=12, CS=10, DC=13, RST=14 (configure TFT_eSPI's
 `User_Setup.h` to match — ILI9486, 320×480; the exact defines are in the
 PlatformIO `build_flags` below).
