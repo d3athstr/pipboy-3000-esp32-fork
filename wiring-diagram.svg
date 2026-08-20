@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1010" viewBox="0 0 1200 1010" font-family="Consolas, Menlo, monospace">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1240" viewBox="0 0 1200 1240" font-family="Consolas, Menlo, monospace">
   <defs>
     <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
       <path d="M0,0 L6,3 L0,6 z" fill="#ff4d4d"/>
     </marker>
   </defs>
 
-  <rect width="1200" height="1010" fill="#0b1a0e"/>
+  <rect width="1200" height="1240" fill="#0b1a0e"/>
 
   <!-- Title -->
   <text x="600" y="38" fill="#30ff50" font-size="22" text-anchor="middle" letter-spacing="3">PIPBOY 3000 v2 — WIRING (ESP32-S3)</text>
@@ -85,7 +85,7 @@
     <text x="76" y="504">SCL</text>
     <text x="76" y="536">SHT31    0x44 temp/hum</text>
     <text x="76" y="560">DS3231   0x68 RTC+CR2032</text>
-    <text x="76" y="584" fill="#e6b450">MAX17048 0x36 gauge (VCC 3V3)</text>
+    <text x="76" y="584" fill="#e6b450">MAX17048 0x36 gauge — see below</text>
     <text x="76" y="612" fill="#e6b450">VCC ── 3V3</text>
     <text x="190" y="612" fill="#8b949e">GND ── GND</text>
   </g>
@@ -111,8 +111,8 @@
 
   <!-- ============ TFT (top-right) ============ -->
   <rect x="900" y="150" width="240" height="290" fill="#0a2410" stroke="#30ff50" stroke-width="2"/>
-  <text x="1020" y="178" fill="#30ff50" font-size="15" text-anchor="middle" font-weight="bold">4" TFT 480x320</text>
-  <text x="1020" y="196" fill="#186828" font-size="12" text-anchor="middle">ILI9486 · SPI · write-only</text>
+  <text x="1020" y="178" fill="#30ff50" font-size="15" text-anchor="middle" font-weight="bold">3.5" TFT 480x320</text>
+  <text x="1020" y="196" fill="#186828" font-size="12" text-anchor="middle">ILI9488 · LovyanGFX · 8 MHz</text>
   <g fill="#30ff50" font-size="13">
     <text x="916" y="229">MOSI (SDI)</text>
     <text x="916" y="259">SCK</text>
@@ -130,7 +130,7 @@
     <line x1="720" y1="315" x2="900" y2="315"/>
     <line x1="720" y1="345" x2="900" y2="345"/>
   </g>
-  <text x="810" y="215" fill="#186828" font-size="11" text-anchor="middle">SPI 20 MHz</text>
+  <text x="810" y="215" fill="#186828" font-size="11" text-anchor="middle">SPI 8 MHz</text>
 
   <!-- ============ DFPlayer (bottom-right) ============ -->
   <rect x="900" y="500" width="240" height="260" fill="#0a2410" stroke="#30ff50" stroke-width="2"/>
@@ -189,5 +189,62 @@
   <text x="735" y="930" fill="#186828" font-size="10">500mA cont / ~1A peak</text>
   <text x="340" y="980" fill="#186828" font-size="11">Wago blocks = 5V / GND rails. Keep BAT leads &lt;3in. * TFT power: see WIRING.md.</text>
 
-  <text x="600" y="1000" fill="#186828" font-size="11" text-anchor="middle">PipBoy 3000 ESP32 Fork · 2026-07-11 · text version: WIRING.md</text>
+
+  <!-- ============ MAX17048 fuel gauge detail (bottom) ============ -->
+  <rect x="60" y="1005" width="1080" height="210" fill="#0a2410" stroke="#30ff50" stroke-width="2"/>
+  <text x="600" y="1033" fill="#30ff50" font-size="15" text-anchor="middle" font-weight="bold">MAX17048 FUEL GAUGE — 8-PIN HEADER AS COUNTED ON THE BOARD (2026-08-20)</text>
+  <rect x="90" y="1046" width="1020" height="30" fill="#0b1a0e" stroke="#e6b450"/>
+  <text x="600" y="1066" fill="#e6b450" font-size="12" text-anchor="middle">MAX17048 module — I2C 0x36 — no &#8220;BAT&#8221; pad, not Adafruit 5580 labelling</text>
+  <line x1="154" y1="1076" x2="154" y2="1082" stroke="#ff4d4d" stroke-width="2"/>
+  <rect x="124" y="1082" width="60" height="22" fill="#0b1a0e" stroke="#ff4d4d"/>
+  <text x="154" y="1098" fill="#ff4d4d" font-size="13" text-anchor="middle" font-weight="bold">+</text>
+  <line x1="154" y1="1104" x2="154" y2="1114" stroke="#ff4d4d" stroke-width="2"/>
+  <text x="154" y="1128" fill="#ff4d4d" font-size="11" text-anchor="middle">PowerBoost</text>
+  <text x="154" y="1142" fill="#186828" font-size="11" text-anchor="middle">BAT pad</text>
+  <text x="154" y="1156" fill="#186828" font-size="11" text-anchor="middle">(raw cell)</text>
+  <line x1="281" y1="1076" x2="281" y2="1082" stroke="#8b949e" stroke-width="2"/>
+  <rect x="251" y="1082" width="60" height="22" fill="#0b1a0e" stroke="#8b949e"/>
+  <text x="281" y="1098" fill="#8b949e" font-size="13" text-anchor="middle" font-weight="bold">−</text>
+  <line x1="281" y1="1104" x2="281" y2="1114" stroke="#8b949e" stroke-width="2"/>
+  <text x="281" y="1128" fill="#8b949e" font-size="11" text-anchor="middle">GND rail</text>
+  <line x1="409" y1="1076" x2="409" y2="1082" stroke="#56ccf2" stroke-width="2"/>
+  <rect x="379" y="1082" width="60" height="22" fill="#0b1a0e" stroke="#56ccf2"/>
+  <text x="409" y="1098" fill="#56ccf2" font-size="13" text-anchor="middle" font-weight="bold">SDA</text>
+  <line x1="409" y1="1104" x2="409" y2="1114" stroke="#56ccf2" stroke-width="2"/>
+  <text x="409" y="1128" fill="#56ccf2" font-size="11" text-anchor="middle">ESP32-S3</text>
+  <text x="409" y="1142" fill="#186828" font-size="11" text-anchor="middle">GPIO8</text>
+  <text x="409" y="1156" fill="#186828" font-size="11" text-anchor="middle">(shared bus)</text>
+  <line x1="536" y1="1076" x2="536" y2="1082" stroke="#56ccf2" stroke-width="2"/>
+  <rect x="506" y="1082" width="60" height="22" fill="#0b1a0e" stroke="#56ccf2"/>
+  <text x="536" y="1098" fill="#56ccf2" font-size="13" text-anchor="middle" font-weight="bold">SCL</text>
+  <line x1="536" y1="1104" x2="536" y2="1114" stroke="#56ccf2" stroke-width="2"/>
+  <text x="536" y="1128" fill="#56ccf2" font-size="11" text-anchor="middle">ESP32-S3</text>
+  <text x="536" y="1142" fill="#186828" font-size="11" text-anchor="middle">GPIO9</text>
+  <text x="536" y="1156" fill="#186828" font-size="11" text-anchor="middle">(shared bus)</text>
+  <line x1="664" y1="1076" x2="664" y2="1082" stroke="#186828" stroke-width="2"/>
+  <rect x="634" y="1082" width="60" height="22" fill="#0b1a0e" stroke="#186828"/>
+  <text x="664" y="1098" fill="#186828" font-size="13" text-anchor="middle" font-weight="bold">QST</text>
+  <line x1="664" y1="1104" x2="664" y2="1114" stroke="#186828" stroke-width="2"/>
+  <text x="664" y="1128" fill="#186828" font-size="11" text-anchor="middle">not</text>
+  <text x="664" y="1142" fill="#186828" font-size="11" text-anchor="middle">connected</text>
+  <line x1="791" y1="1076" x2="791" y2="1082" stroke="#e6b450" stroke-width="2"/>
+  <rect x="761" y="1082" width="60" height="22" fill="#0b1a0e" stroke="#e6b450"/>
+  <text x="791" y="1098" fill="#e6b450" font-size="13" text-anchor="middle" font-weight="bold">VCC</text>
+  <line x1="791" y1="1104" x2="791" y2="1114" stroke="#e6b450" stroke-width="2"/>
+  <text x="791" y="1128" fill="#e6b450" font-size="11" text-anchor="middle">ESP32-S3 3V3</text>
+  <text x="791" y="1142" fill="#ff4d4d" font-size="11" text-anchor="middle">NOT the cell</text>
+  <line x1="919" y1="1076" x2="919" y2="1082" stroke="#8b949e" stroke-width="2"/>
+  <rect x="889" y="1082" width="60" height="22" fill="#0b1a0e" stroke="#8b949e"/>
+  <text x="919" y="1098" fill="#8b949e" font-size="13" text-anchor="middle" font-weight="bold">GND</text>
+  <line x1="919" y1="1104" x2="919" y2="1114" stroke="#8b949e" stroke-width="2"/>
+  <text x="919" y="1128" fill="#8b949e" font-size="11" text-anchor="middle">GND rail</text>
+  <line x1="1046" y1="1076" x2="1046" y2="1082" stroke="#186828" stroke-width="2"/>
+  <rect x="1016" y="1082" width="60" height="22" fill="#0b1a0e" stroke="#186828"/>
+  <text x="1046" y="1098" fill="#186828" font-size="13" text-anchor="middle" font-weight="bold">ALT</text>
+  <line x1="1046" y1="1104" x2="1046" y2="1114" stroke="#186828" stroke-width="2"/>
+  <text x="1046" y="1128" fill="#186828" font-size="11" text-anchor="middle">not</text>
+  <text x="1046" y="1142" fill="#186828" font-size="11" text-anchor="middle">connected</text>
+  <text x="600" y="1180" fill="#ff4d4d" font-size="11" text-anchor="middle">VCC on the cell &#8594; I2C idles at ~4.2 V &#8594; over GPIO8/9&#8217;s 3.6 V absolute max. VCC comes from the 3.3 V logic rail.</text>
+  <text x="600" y="1198" fill="#186828" font-size="11" text-anchor="middle">ModelGauge = voltage only, no sense resistor — pack current need not flow through the gauge; in-line and tapped are the same circuit.</text>
+  <text x="600" y="1233" fill="#186828" font-size="11" text-anchor="middle">PipBoy 3000 ESP32 Fork · 2026-08-20 · text version: WIRING.md</text>
 </svg>
