@@ -121,12 +121,21 @@ LED cathode return. (The battery ground returns through the PowerBoost JST.)
 MAX17043 modules for another project (the firmware's library rejects them).
 
 The gauge reads the **raw battery cell**. It is a ModelGauge part — it
-measures **voltage only**, no sense resistor — so pack current must **not** be
-routed through it. This board has a **single `+`/`−` pair** (no second
-pass-through pair like Adafruit's two-JST boards), so the gauge is a **tap**,
-full stop: it hangs off the cell node and carries no load current.
+measures **voltage only**, no sense resistor — so pack current does not have
+to flow through it, but it may.
 
-**Where the battery leads actually land — both go to the PowerBoost:**
+**Both boards have a JST battery port**, and on the gauge the JST and the
+`+`/`−` header pins are the same net. So there are two arrangements and they
+are **electrically identical** — the gauge sees the cell voltage either way:
+
+**A — in-line** (fewest solder joints, if the connectors mate):
+
+```
+LiPo ──JST──► MAX17048 JST      (gauge + / − header = same net as its JST)
+              MAX17048 + / − ──► PowerBoost battery input
+```
+
+**B — tap** (keeps pack current out of the gauge's copper):
 
 ```
 LiPo  + ──┬──► PowerBoost  BAT   (JST + pin, or the BAT pad)
@@ -136,16 +145,32 @@ LiPo  − ──┬──► PowerBoost  GND   (JST − pin, or a GND pad)
           └──► MAX17048    −  and  GND   (common ground rail)
 ```
 
-The power chain is `LiPo → PowerBoost 500C → 5 V rail → ESP32 VIN` — the gauge
-only ever hangs off the **cell side**, never between the PowerBoost and the
-ESP32.
+Either way the power chain is
+`LiPo → PowerBoost 500C → 5 V rail → ESP32 VIN` — the gauge only ever hangs
+off the **cell side**, never between the PowerBoost and the ESP32. And either
+way `VCC` still comes from the ESP32's **3V3**, never from the cell.
 
-**Connectors don't mate:** `[12]` is a **JST 1.25 mm** cell, the PowerBoost
-input is **JST-PH 2.0 mm**. Solder the battery leads straight to the
-PowerBoost `BAT` / `GND` pads rather than adding an adapter pigtail — fewer
-connectors in the path that already destroyed one cell. **Meter the leads
-against the silkscreen before soldering**; the keyed JST on that cell was
-reversed relative to the board.
+**Connectors: the PowerBoost and gauge JSTs are the same size (JST-PH 2.0),
+so those two mate.** The odd one out is the cell — `[12]` is listed as **JST
+1.25 mm**. Re-terminate the cell to PH 2.0 (or fit a 1.25 mm F → PH 2.0 M
+adapter) and arrangement **A** becomes two mating plugs plus one soldered
+pair:
+
+```
+LiPo (PH 2.0) ──────────► MAX17048 JST
+MAX17048 + / − ──pigtail─► PowerBoost JST  (or its BAT / GND pads)
+```
+
+One meter check before committing to A: **continuity between the gauge's JST
+`+` pin and its header `+` pad** — they should beep. That is what makes the
+header a pass-through rather than a separate sense input. If they don't beep,
+build **B** instead.
+
+**Meter polarity against the silkscreen before connecting anything**, at every
+joint. The cell's keyed JST was reversed relative to the PowerBoost, and a
+keyed connector is not a polarity guarantee — that mistake killed the first
+cell and the PowerBoost, and the damaged PowerBoost then browned out the
+display for three weeks.
 
 **Pinout — as counted on the board in hand (2026-08-20):** eight pins,
 `+  −  SDA  SCL  QST  VCC  GND  ALT`. Note there is **no `BAT` pad** and no
@@ -155,8 +180,8 @@ feed below straightforward.
 
 | Gauge pin | To | Note |
 |-----------|----|------|
-| `+` | PowerBoost `BAT` pad (raw cell +) | the sense node — **not** the 5 V rail |
-| `−` | GND rail | cell −; normally common with `GND` on the module |
+| `+` | raw cell + — the gauge JST (A) or the PowerBoost `BAT` pad (B) | the sense node — **not** the 5 V rail |
+| `−` | cell − / GND rail | normally common with `GND` on the module |
 | `VCC` | ESP32 **3V3** | logic / I²C pullup rail — **not** the cell |
 | `GND` | GND rail | |
 | `SDA` | **GPIO8** | shared bus with SHT31 + DS3231 |
