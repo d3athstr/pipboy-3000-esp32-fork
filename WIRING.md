@@ -121,17 +121,31 @@ LED cathode return. (The battery ground returns through the PowerBoost JST.)
 MAX17043 modules for another project (the firmware's library rejects them).
 
 The gauge reads the **raw battery cell**. It is a ModelGauge part — it
-measures **voltage only**, no sense resistor — so pack current does not have
-to flow through it. Two physically different arrangements, electrically the
-same circuit:
+measures **voltage only**, no sense resistor — so pack current must **not** be
+routed through it. This board has a **single `+`/`−` pair** (no second
+pass-through pair like Adafruit's two-JST boards), so the gauge is a **tap**,
+full stop: it hangs off the cell node and carries no load current.
 
-- **In-line**: LiPo → gauge `+`/`−` → on to the PowerBoost battery input.
-- **Tap** (fewer connectors, preferred here): LiPo → PowerBoost as normal,
-  plus one sense wire from the PowerBoost `BAT` pad to the gauge's `+` pad.
+**Where the battery leads actually land — both go to the PowerBoost:**
 
-Either way the power chain is
-`LiPo → PowerBoost 500C → 5 V rail → ESP32 VIN` — the gauge only ever hangs
-off the **cell side**, never between the PowerBoost and the ESP32.
+```
+LiPo  + ──┬──► PowerBoost  BAT   (JST + pin, or the BAT pad)
+          └──► MAX17048    +     (thin sense wire)
+
+LiPo  − ──┬──► PowerBoost  GND   (JST − pin, or a GND pad)
+          └──► MAX17048    −  and  GND   (common ground rail)
+```
+
+The power chain is `LiPo → PowerBoost 500C → 5 V rail → ESP32 VIN` — the gauge
+only ever hangs off the **cell side**, never between the PowerBoost and the
+ESP32.
+
+**Connectors don't mate:** `[12]` is a **JST 1.25 mm** cell, the PowerBoost
+input is **JST-PH 2.0 mm**. Solder the battery leads straight to the
+PowerBoost `BAT` / `GND` pads rather than adding an adapter pigtail — fewer
+connectors in the path that already destroyed one cell. **Meter the leads
+against the silkscreen before soldering**; the keyed JST on that cell was
+reversed relative to the board.
 
 **Pinout — as counted on the board in hand (2026-08-20):** eight pins,
 `+  −  SDA  SCL  QST  VCC  GND  ALT`. Note there is **no `BAT` pad** and no
