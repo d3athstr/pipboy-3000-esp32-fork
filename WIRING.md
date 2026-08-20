@@ -150,6 +150,18 @@ Either way the power chain is
 off the **cell side**, never between the PowerBoost and the ESP32. And either
 way `VCC` still comes from the ESP32's **3V3**, never from the cell.
 
+**The 5 V side does not change when you fit the gauge.** `5Vo` keeps feeding
+the ESP32 `5V`/`VIN`, DFPlayer `VCC`, TFT `VCC` and the LED anodes exactly as
+it does now; the EN switch and USB charging are untouched. The only change to
+the power chain is *upstream* of the PowerBoost, where the cell now reaches
+its battery input through the gauge (arrangement A).
+
+Do **not** feed the gauge's `VCC` from the 5 V rail. The module tolerates
+2.5–5.0 V, but its I²C pullups would then idle at 5 V — well past GPIO8/9's
+3.6 V maximum. Note also that the gauge sits on the cell side of the boost, so
+it **stays powered with the EN switch off** — by design, ~3 µA in hibernate,
+only worth caring about over long storage (unplug the cell).
+
 **Connectors: the PowerBoost and gauge JSTs are the same size (JST-PH 2.0),
 so those two mate.** The odd one out is the cell — `[12]` is listed as **JST
 1.25 mm**. Re-terminate the cell to PH 2.0 (or fit a 1.25 mm F → PH 2.0 M
