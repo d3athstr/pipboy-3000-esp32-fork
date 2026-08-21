@@ -114,11 +114,13 @@ Tie all of these to the GND rail: PowerBoost `GND` pads, ESP32 **GND**,
 TFT **GND**, DFPlayer **GND**, SHT31 & DS3231 **GND**, MOSFET **source**,
 LED cathode return. (The battery ground returns through the PowerBoost JST.)
 
-### MAX17048 fuel gauge — boards on hand, not yet installed
+### MAX17048 fuel gauge — FITTED AND WORKING (2026-08-20)
 
-**Stock (2026-08-20): 7 boards on hand**, and they are not all the same part
-— see "Which board you have" below. Wire a genuine **MAX17048**; keep the
-MAX17043 modules for another project (the firmware's library rejects them).
+**Working as of 2026-08-20** — reads 29% / 3.65 V, HP bar live on STAT. The
+fitted board reports **VERSION `0x0003`, i.e. a MAX17043**, which the stock
+Adafruit library refuses; the firmware now uses its own driver (see below).
+Bringing it up took two independent fixes, both recorded here: the `VCC`
+backfeed, and the library's version gate.
 
 The gauge reads the **raw battery cell**. It is a ModelGauge part — it
 measures **voltage only**, no sense resistor — so pack current does not have
@@ -194,7 +196,7 @@ feed below straightforward.
 |-----------|----|------|
 | `+` | raw cell + — the gauge JST (A) or the PowerBoost `BAT` pad (B) | the sense node — **not** the 5 V rail |
 | `−` | cell − / GND rail | normally common with `GND` on the module |
-| `VCC` | **DO NOT WIRE TO 3V3 UNTIL METERED** — see the warning below | on this clone it is cell-derived and backfeeds the ESP32 |
+| `VCC` | **LEAVE UNCONNECTED** — see the warning below | cell-derived on this board; wiring it to 3V3 backfeeds the ESP32 |
 | `GND` | GND rail | |
 | `SDA` | **GPIO8** | shared bus with SHT31 + DS3231 |
 | `SCL` | **GPIO9** | |
@@ -214,7 +216,12 @@ feed below straightforward.
 > maximum** and back-drives its LDO. **The first ESP32-S3 on this build was
 > already replaced for suspected damage — do not leave this connected.**
 >
-> **Meter before wiring `VCC` anywhere.** Cell disconnected, everything off:
+> **Resolved on this build: `VCC` is left unconnected and everything works.**
+> The chip powers itself from `+`, the shared bus is held at 3.3 V by the
+> SHT31 / DS3231 modules' pullups, and the gauge answers at `0x36`. Pulling
+> that one wire also restored the EN switch.
+>
+> On a different module, meter first — cell disconnected, everything off,
 > check continuity between `VCC` and `+`.
 >
 > - **They beep → same net.** Leave `VCC` unconnected. The chip powers itself
@@ -253,10 +260,12 @@ the cell node, which puts the pullups at 4.2 V. **Meter before connecting:**
 power the board, leave the ESP32 off, measure SDA→GND. Above 3.6 V, do not
 land it on GPIO8/9 — that board needs its own 3.3 V feed or a level shifter.
 
-**A real MAX17043 will never be detected, and that is not a wiring fault.**
-The firmware uses `Adafruit_MAX1704X`, whose `begin()` requires
-`(getICversion() & 0xFFF0) == 0x0010` — MAX17048/49 only. If the HP bar stays
-dark on a 17043 board, the harness is fine; the library is refusing the chip.
+**The firmware no longer uses `Adafruit_MAX1704X`** — its `begin()` requires
+`(getICversion() & 0xFFF0) == 0x0010`, i.e. MAX17048/49 only, and the board
+fitted here is a **MAX17043 (`0x0003`)**, so it was refused outright. It is
+replaced by `code/PipBoy3000-S3/fuelgauge.h`, a direct-register driver that
+accepts both families. **Do not "simplify" it back to the Adafruit library —
+that silently disables the HP bar on this hardware.**
 
 **No battery = silent bus.** The gauge is cell-powered, so on USB with no LiPo
 attached it will not answer at `0x36`. The 2026-07-11 bring-up log's
@@ -334,6 +343,22 @@ always fine and independent of this.)
 | 5V/VIN | power   | 5V rail from boost | |
 | 3V3  | power out | sensor boards | |
 | GND  | —         | common ground | |
+
+## Fuel-gauge diagnostics (firmware v5.1+)
+
+No serial cable needed — the device reports the bus over HTTP:
+
+| Call | Gives |
+|------|-------|
+| `curl http://192.168.15.60/api/status` | `gauge` (detected part), `gauge_ver` (raw VERSION), `i2c` (last scan), `batt`, `volt` |
+| `curl http://192.168.15.60/api/i2cscan` | **live** rescan — use this while reflowing, no reboot |
+
+Healthy bus on this build: **`0x36,0x44,0x57,0x68`** — gauge, SHT31, the
+DS3231 module's AT24C32 EEPROM, and the DS3231 itself. `0x57` is part of the
+RTC module, not a stray device.
+
+Since v5.2 the gauge is re-probed every 5 s while it is missing, so fitting or
+repairing it with the PipBoy running picks it up **without a power cycle**.
 
 ## Do / don't
 
