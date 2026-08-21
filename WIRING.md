@@ -194,19 +194,41 @@ feed below straightforward.
 |-----------|----|------|
 | `+` | raw cell + — the gauge JST (A) or the PowerBoost `BAT` pad (B) | the sense node — **not** the 5 V rail |
 | `−` | cell − / GND rail | normally common with `GND` on the module |
-| `VCC` | ESP32 **3V3** | logic / I²C pullup rail — **not** the cell |
+| `VCC` | **DO NOT WIRE TO 3V3 UNTIL METERED** — see the warning below | on this clone it is cell-derived and backfeeds the ESP32 |
 | `GND` | GND rail | |
 | `SDA` | **GPIO8** | shared bus with SHT31 + DS3231 |
 | `SCL` | **GPIO9** | |
 | `QST` | **leave unconnected** | quick-start; hardware reset of the gauge |
 | `ALT` | **leave unconnected** | alert output; the firmware polls instead |
 
-The IC is powered from the cell (`CELL` is the MAX17048's only supply pin), so
-`+` is both the measurement input and the chip's power. `VCC` feeds only the
-logic / pullup rail — tie it to the cell instead and SDA/SCL idle at ~4.2 V,
-over GPIO8/9's **3.6 V absolute maximum**. When the EN switch kills the boost,
-`VCC` drops to 0 V while `+` stays live: that is the intended off state. Draw
-is ~3 µA hibernate / ~23 µA active, off the cell.
+> ### ⚠️ `VCC` IS NOT A LOGIC-SUPPLY INPUT ON THIS BOARD (found 2026-08-20)
+>
+> **Wiring `VCC` to the ESP32's `3V3` backfed the cell into the 3.3 V rail.**
+> Symptoms: the EN switch stopped turning the PipBoy off (the cell reaches the
+> ESP32 around the boost), and the gauge never appeared at `0x36`.
+>
+> The MAX17048 die is powered from the cell — `CELL` is its only supply pin —
+> so on a minimal clone the `VCC` pad is **cell-derived**, effectively a
+> battery-voltage *output* like Adafruit's `Bat` pin, not a logic supply you
+> feed. Driving ~4.2 V into `3V3` is over the ESP32-S3's **3.6 V absolute
+> maximum** and back-drives its LDO. **The first ESP32-S3 on this build was
+> already replaced for suspected damage — do not leave this connected.**
+>
+> **Meter before wiring `VCC` anywhere.** Cell disconnected, everything off:
+> check continuity between `VCC` and `+`.
+>
+> - **They beep → same net.** Leave `VCC` unconnected. The chip powers itself
+>   from `+`. But the module's onboard I²C pullups then sit at cell voltage,
+>   which would drag the shared bus to ~4.2 V — so **remove the module's two
+>   SDA/SCL pullup resistors** and let the SHT31 / DS3231 modules' existing
+>   3.3 V pullups hold the bus. That is exactly Adafruit's own topology (chip
+>   on the cell, pullups on the logic rail) and needs no extra parts.
+> - **They don't beep → `VCC` is a genuine separate supply.** Then 3V3 is
+>   correct and the backfeed is coming from somewhere else — find it before
+>   reconnecting.
+>
+> Either way the gauge stays powered with the EN switch off, since it sits on
+> the cell side of the boost (~3 µA hibernate).
 
 Check `−` to `GND` for continuity before wiring. On most of these modules they
 are the same net, in which case landing both on the ground rail is harmless
@@ -323,9 +345,10 @@ always fine and independent of this.)
 - **Do** keep the 1 kΩ in the ESP32→DFPlayer RX line; without it the speaker
   hisses constantly at idle.
 - **Do** wire the MAX17048 `+` input to the battery side (before the switch),
-  not the 5V rail — it measures pack voltage. **Do** feed its `VCC` from the
-  ESP32's **3V3**, not from the cell, or the I²C pullups sit at 4.2 V and
-  exceed GPIO8/9's 3.6 V maximum.
+  not the 5V rail — it measures pack voltage. **Don't** wire its `VCC` to the
+  ESP32's `3V3` until you have metered it — on this clone `VCC` is
+  cell-derived and backfeeds the 3.3 V rail. See the warning in the fuel-gauge
+  section.
 - **Don't** use GPIO 0, 3, 19/20, 45, 46 for anything (strapping/USB pins),
   and avoid 26–37 (flash/PSRAM on the N16R8 module).
 - **Don't** feed the TFT or DFPlayer logic from 5V — all signals are 3.3V.
@@ -340,8 +363,9 @@ The boards arrived (7 on hand, 2026-08-20) but none is wired in yet — that's
 fine. The firmware probes for it at boot; if it's absent, `fuelOK=false`, the
 boot log shows `MAX17048 NOT FOUND (0x36) / HP bar disabled` (a warning, not a
 failure), the STAT screen simply omits the HP bar, and the control page shows
-no battery line. To install: wire `SDA`/`SCL` to GPIO8/9, `VCC` to **3V3**,
-`GND`/`−` to the rail and `+` to the battery side (before the TPS61090),
+no battery line. To install: wire `SDA`/`SCL` to GPIO8/9, `GND`/`−` to the rail and `+` to the
+battery side (before the TPS61090) — and **meter `VCC` before connecting it
+anywhere** (see the warning above),
 power-cycle, and the HP bar appears — **no reflash**. Nothing else depends on
 it. Full pin table and the board-variant warnings are in the fuel-gauge
 section above.
