@@ -521,7 +521,7 @@ void handleStatus() {
   json += ",\"ledmode\":" + String(ledMode);
   json += ",\"ledbright\":" + String(ledBright);
   json += ",\"ip\":\"" + (staOK ? WiFi.localIP().toString() : String("not connected")) + "\"";
-  json += ",\"build\":\"v5.1-gauge " __DATE__ " " __TIME__ "\"";
+  json += ",\"build\":\"v5.2-gauge " __DATE__ " " __TIME__ "\"";
   json += ",\"screen\":" + String(currentScreen);
   json += ",\"gauge\":\"" + String(maxlipo.icName()) + "\"";
   json += ",\"gauge_ver\":\"0x" + String(maxlipo.version(), HEX) + "\"";
@@ -824,8 +824,27 @@ void setup() {
 //  MAIN LOOP — non-blocking
 // ============================================================
 
+// The gauge can be fitted (or repaired) with the PipBoy running, so re-probe
+// periodically instead of only at boot -- otherwise "plug it in later, no
+// reflash needed" still costs a power cycle.
+void fuelTick() {
+  if (fuelOK) return;
+  static unsigned long lastTry = 0;
+  unsigned long now = millis();
+  if (now - lastTry < 5000) return;
+  lastTry = now;
+  if (maxlipo.begin()) {
+    fuelOK = true;
+    i2cFound = i2cScanString();
+    Serial.printf("Fuel gauge appeared: %s ver 0x%04X, %d%% %.2fV\n",
+                  maxlipo.icName(), maxlipo.version(),
+                  (int)maxlipo.cellPercent(), maxlipo.cellVoltage());
+  }
+}
+
 void loop() {
   server.handleClient();
+  fuelTick();
   if (otaStarted) ArduinoOTA.handle();
   wifiTick();
   ledTick();

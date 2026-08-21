@@ -13,13 +13,20 @@
 // board actually fitted to this PipBoy may be either one.
 //
 // The two families share the I2C address (0x36) and the register map.  The
-// only difference that matters here is VCELL scaling:
+// version gate is the ONLY real blocker -- the VCELL forms are numerically
+// equivalent:
 //
-//   MAX17048/49  16-bit VCELL, 78.125 uV/LSB
-//   MAX17043/44  12-bit VCELL left-aligned in 16 bits, 1.25 mV/LSB
+//   MAX17048/49  16-bit VCELL, 78.125 uV/LSB   ->  raw * 78.125e-6
+//   MAX17043/44  12-bit left-aligned, 1.25 mV  ->  (raw >> 4) * 1.25e-3
 //
-// SOC is 1/256 % on both.  We read VERSION once at begin() and pick the
-// scaling from it, so either part gives a correct voltage and percentage.
+// (raw >> 4) * 1.25e-3 == raw * 78.125e-6, so the families differ only in the
+// low 4 bits of resolution, not in the answer.  We still pick per-part so the
+// 17043's undefined low nibble is masked off rather than added as noise.
+//
+// SOC is 1/256 % on both.
+//
+// Confirmed on this build 2026-08-20: VERSION reads 0x0003, so the fitted
+// board is a MAX17043 -- Adafruit's library would have refused it outright.
 
 class FuelGauge {
 public:
