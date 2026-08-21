@@ -99,7 +99,7 @@ const byte TXD2 = 17;
 #include "DFRobotDFPlayerMini.h"
 #include "Adafruit_SHT31.h"
 #include "RTClib.h"
-#include "Adafruit_MAX1704X.h"
+#include "fuelgauge.h"
 #include <time.h>
 
 LGFX tft;
@@ -107,7 +107,7 @@ DFRobotDFPlayerMini myDFPlayer;
 #define FPSerial Serial1
 Adafruit_SHT31 sht31 = Adafruit_SHT31();
 RTC_DS3231 rtc;
-Adafruit_MAX17048 maxlipo;
+FuelGauge maxlipo;
 WebServer server(80);
 Preferences prefs;
 
@@ -116,6 +116,7 @@ bool dfPlayerOK = false;
 bool sensorOK   = false;
 bool rtcOK      = false;
 bool fuelOK     = false;
+String i2cFound = "";   // bus scan taken at boot
 bool staOK      = false;   // connected to home WiFi
 bool timeOK     = false;   // system clock trustworthy (RTC, NTP or phone)
 bool ntpDone    = false;
@@ -520,8 +521,11 @@ void handleStatus() {
   json += ",\"ledmode\":" + String(ledMode);
   json += ",\"ledbright\":" + String(ledBright);
   json += ",\"ip\":\"" + (staOK ? WiFi.localIP().toString() : String("not connected")) + "\"";
-  json += ",\"build\":\"v5.0-ILI9488 " __DATE__ " " __TIME__ "\"";
+  json += ",\"build\":\"v5.1-gauge " __DATE__ " " __TIME__ "\"";
   json += ",\"screen\":" + String(currentScreen);
+  json += ",\"gauge\":\"" + String(maxlipo.icName()) + "\"";
+  json += ",\"gauge_ver\":\"0x" + String(maxlipo.version(), HEX) + "\"";
+  json += ",\"i2c\":\"" + i2cFound + "\"";
   json += ",\"knob\":\"" + String((int)digitalRead(IN_STAT)) + String((int)digitalRead(IN_INV)) + String((int)digitalRead(IN_DATA)) + String((int)digitalRead(IN_TIME)) + String((int)digitalRead(IN_RADIO)) + "\"";
   json += "}";
   server.send(200, "application/json", json);
@@ -609,6 +613,11 @@ void setupWebServer() {
       Update.end(true);
       Serial.printf("Web OTA: %u bytes\n", up.totalSize);
     }
+  });
+
+  server.on("/api/i2cscan", HTTP_GET, []() {
+    i2cFound = i2cScanString();
+    server.send(200, "application/json", "{\"i2c\":\"" + i2cFound + "\"}");
   });
 
   server.onNotFound([]() {
@@ -708,13 +717,18 @@ void setup() {
   }
 
   // ---- Battery fuel gauge ----
-  bootPrint("Probing MAX17048 fuel gauge...");
+  i2cFound = i2cScanString();
+  bootPrint(("I2C devices: " + i2cFound).c_str());
+  bootPrint("Probing MAX1704x fuel gauge...");
   if (maxlipo.begin()) {
     fuelOK = true;
-    String msg = "Battery: " + String((int)maxlipo.cellPercent()) + "%";
+    String id = String(maxlipo.icName()) + " ver 0x" + String(maxlipo.version(), HEX);
+    bootPrint(id.c_str(), 1);
+    String msg = "Battery: " + String((int)maxlipo.cellPercent()) + "% / "
+               + String(maxlipo.cellVoltage(), 2) + "V";
     bootPrint(msg.c_str(), 1);
   } else {
-    bootPrint("MAX17048 NOT FOUND (0x36)", 2);
+    bootPrint("NO DEVICE AT 0x36", 2);
     bootPrint("HP bar disabled", 2);
   }
 
