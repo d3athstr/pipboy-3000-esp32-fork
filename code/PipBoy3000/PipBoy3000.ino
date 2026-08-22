@@ -22,7 +22,7 @@
 // POSIX TZ string — DST is handled automatically. US Central shown;
 // examples: "EST5EDT,M3.2.0,M11.1.0" "MST7MDT,M3.2.0,M11.1.0"
 // "PST8PDT,M3.2.0,M11.1.0" "CET-1CEST,M3.5.0,M10.5.0/3" (France)
-#define TZ_INFO "CST6CDT,M3.2.0,M11.1.0"
+#define TZ_INFO "EST5EDT,M3.2.0,M11.1.0"
 uint16_t notification_volume = 25;     // 0-30 (30 distorts and can brown out)
 //=====================================================================
 bool res;

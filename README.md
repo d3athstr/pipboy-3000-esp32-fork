@@ -155,8 +155,12 @@ keeping the WEBPORTAL feature set (Fallout boot terminal, themed WiFiManager
 captive portal, graceful degradation). Configure at the top of the file:
 
 - `#define USE_FAHRENHEIT` — comment out for Celsius.
-- `#define TZ_INFO "CST6CDT,M3.2.0,M11.1.0"` — POSIX timezone (US Central
-  default). DST is now handled correctly by the ESP32's own SNTP/TZ engine.
+- `#define TZ_INFO "EST5EDT,M3.2.0,M11.1.0"` — POSIX timezone (US Eastern
+  default; example strings for other zones are in the comment above it).
+  DST is handled correctly by the ESP32's own SNTP/TZ engine. Time is kept
+  as UTC and `TZ_INFO` only controls display, so a wrong value here shows up
+  as a clock that is stubbornly offset by the zone difference no matter how
+  often you re-sync it — not as a clock that fails to set.
 - `notification_volume` — default 25 (30 = max, distorts).
 
 ### Fixes applied (2026-07-08) vs upstream WEBPORTAL sketches
