@@ -25,7 +25,7 @@
 
 //========================USEFUL VARIABLES=============================
 // #define USE_FAHRENHEIT              // commented = Celsius
-#define TZ_INFO "CST6CDT,M3.2.0,M11.1.0" // POSIX TZ, DST automatic
+#define TZ_INFO "EST5EDT,M3.2.0,M11.1.0" // POSIX TZ, DST automatic
 // Passwords live in secrets.h (gitignored): copy secrets.h.example to
 // secrets.h and set your own. Without it, the PUBLISHED defaults below are
 // used — fine on the bench, don't wear it that way.

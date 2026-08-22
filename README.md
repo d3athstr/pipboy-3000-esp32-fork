@@ -58,6 +58,13 @@ adds three small I2C boards. Zero changes to the 3D-printed parts.
 - **DS3231 RTC is the timekeeper** — clock survives power-off (±2 min/yr).
   NTP (home WiFi, background) or the phone button correct it. No more WiFi
   dependency, no 120 s boot hang, no reboot loop at conventions.
+- **Timezone is compile-time** — `#define TZ_INFO` at the top of the sketch,
+  POSIX format, DST handled by the ESP32 SNTP/TZ engine. **Default is
+  `EST5EDT,M3.2.0,M11.1.0` (US Eastern) — change it for your zone.** All
+  time is stored as UTC (`settimeofday()` + `rtc.adjust(DateTime(epochUTC))`);
+  `TZ_INFO` only controls display. A wrong value looks exactly like "the
+  clock will not set": the sync button works, then the clock reads back
+  offset by the zone difference (see 2026-08-21).
 - **MAX17048 fuel gauge → HP bar** on the STAT screen (amber <40%, red <20%).
   **Fitted and working 2026-08-20.** The fitted die is actually a **MAX17043**
   (VERSION `0x0003`), which `Adafruit_MAX1704X` refuses, so the firmware uses
